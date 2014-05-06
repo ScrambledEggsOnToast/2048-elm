@@ -299,6 +299,20 @@ Elm.Logic.make = function (_elm) {
    var Text = Elm.Text.make(_elm);
    var Time = Elm.Time.make(_elm);
    var _op = {};
+   var newTileIndex = F2(function (x,
+   g) {
+      return function () {
+         var emptyTileIndices = GameModel.emptyTiles(g);
+         return function () {
+            switch (emptyTileIndices.ctor)
+            {case "[]":
+               return Maybe.Nothing;}
+            return Maybe.Just(List.head(A2(List.drop,
+            Basics.floor(Basics.toFloat(List.length(emptyTileIndices)) * x),
+            emptyTileIndices)));
+         }();
+      }();
+   });
    var tile2Probability = 0.9;
    var newTile = function (x) {
       return _U.cmp(x,
@@ -306,23 +320,31 @@ Elm.Logic.make = function (_elm) {
    };
    var stepGame = F2(function (input,
    gameState) {
-      return _U.eq(input.userInput.tilePushDirection,
+      return _U.cmp(gameState.tilesToPlace,
+      0) > 0 ? _U.replace([["nextTile"
+                           ,newTile(List.head(input.randomFloats))]
+                          ,["grid"
+                           ,A3(GameModel.setTile,
+                           A2(Maybe.maybe,
+                           {ctor: "_Tuple2",_0: 0,_1: 0},
+                           Basics.id)(A2(newTileIndex,
+                           List.last(input.randomFloats),
+                           gameState.grid)),
+                           gameState.grid,
+                           gameState.nextTile)]
+                          ,["tilesToPlace"
+                           ,gameState.tilesToPlace - 1]],
+      gameState) : _U.eq(input.userInput.tilePushDirection,
       gameState.tilePush) ? gameState : _U.replace([["tilePush"
                                                     ,input.userInput.tilePushDirection]
-                                                   ,["nextTile"
-                                                    ,newTile(List.head(input.randomFloats))]
-                                                   ,["grid"
-                                                    ,A3(GameModel.setTile,
-                                                    {ctor: "_Tuple2"
-                                                    ,_0: 0
-                                                    ,_1: 0},
-                                                    gameState.grid,
-                                                    gameState.nextTile)]],
+                                                   ,["tilesToPlace"
+                                                    ,gameState.tilesToPlace + 1]],
       gameState);
    });
    _elm.Logic.values = {_op: _op
                        ,tile2Probability: tile2Probability
                        ,newTile: newTile
+                       ,newTileIndex: newTileIndex
                        ,stepGame: stepGame};
    return _elm.Logic.values;
 };Elm.GameModel = Elm.GameModel || {};
@@ -354,13 +376,15 @@ Elm.GameModel.make = function (_elm) {
    var Text = Elm.Text.make(_elm);
    var Time = Elm.Time.make(_elm);
    var _op = {};
-   var GameState = F3(function (a,
+   var GameState = F4(function (a,
    b,
-   c) {
+   c,
+   d) {
       return {_: {}
              ,grid: a
              ,nextTile: c
-             ,tilePush: b};
+             ,tilePush: b
+             ,tilesToPlace: d};
    });
    var Grid = function (a) {
       return {ctor: "Grid",_0: a};
@@ -414,10 +438,60 @@ Elm.GameModel.make = function (_elm) {
    });
    var Empty = {ctor: "Empty"};
    var emptyGrid = Grid(List.repeat(4)(List.repeat(4)(Empty)));
+   var emptyTiles = function (_v14) {
+      return function () {
+         switch (_v14.ctor)
+         {case "Grid":
+            return List.map(function (_v26) {
+                 return function () {
+                    switch (_v26.ctor)
+                    {case "_Tuple3":
+                       return {ctor: "_Tuple2"
+                              ,_0: _v26._1
+                              ,_1: _v26._2};}
+                    _E.Case($moduleName,
+                    "on line 40, column 41 to 44");
+                 }();
+              })(List.filter(function (_v21) {
+                 return function () {
+                    switch (_v21.ctor)
+                    {case "_Tuple3":
+                       return _U.eq(_v21._0,Empty);}
+                    _E.Case($moduleName,
+                    "on line 41, column 43 to 53");
+                 }();
+              })(List.concat(A2(List.zipWith,
+              F2(function (j,r) {
+                 return A2(List.map,
+                 function (_v17) {
+                    return function () {
+                       switch (_v17.ctor)
+                       {case "_Tuple2":
+                          return {ctor: "_Tuple3"
+                                 ,_0: _v17._0
+                                 ,_1: _v17._1
+                                 ,_2: j};}
+                       _E.Case($moduleName,
+                       "on line 43, column 56 to 61");
+                    }();
+                 },
+                 r);
+              }),
+              _L.range(0,
+              3))(List.map(function (r) {
+                 return A2(List.zip,
+                 r,
+                 _L.range(0,3));
+              })(_v14._0)))));}
+         _E.Case($moduleName,
+         "between lines 40 and 45");
+      }();
+   };
    var defaultGame = {_: {}
                      ,grid: emptyGrid
                      ,nextTile: Empty
-                     ,tilePush: InputModel.Up};
+                     ,tilePush: InputModel.Up
+                     ,tilesToPlace: 3};
    var Number = function (a) {
       return {ctor: "Number"
              ,_0: a};
@@ -426,6 +500,7 @@ Elm.GameModel.make = function (_elm) {
                            ,emptyGrid: emptyGrid
                            ,readTile: readTile
                            ,setTile: setTile
+                           ,emptyTiles: emptyTiles
                            ,defaultGame: defaultGame
                            ,Number: Number
                            ,Empty: Empty
@@ -462,7 +537,7 @@ Elm.InputModel.make = function (_elm) {
    var Text = Elm.Text.make(_elm);
    var Time = Elm.Time.make(_elm);
    var _op = {};
-   var delta = Time.fps(15);
+   var delta = Time.fps(30);
    var Input = F3(function (a,
    b,
    c) {
@@ -471,9 +546,6 @@ Elm.InputModel.make = function (_elm) {
              ,timeDelta: a
              ,userInput: b};
    });
-   var randomFloats = function (s) {
-      return Random.floatList(Signal.sampleOn(s)(Signal.constant(2)));
-   };
    var UserInput = function (a) {
       return {_: {}
              ,tilePushDirection: a};
@@ -531,6 +603,9 @@ Elm.InputModel.make = function (_elm) {
       Maybe.Nothing);
    },
    Maybe.Nothing)(Signal.dropRepeats(arrowsDirection)));
+   var randomFloats = function (s) {
+      return Random.floatList(Signal.sampleOn(userInput)(Signal.constant(2)));
+   };
    var input = Signal.sampleOn(delta)(A2(Signal._op["~"],
    A2(Signal._op["~"],
    A2(Signal._op["<~"],

@@ -22,7 +22,7 @@ j
 0
 -}
 
-type GameState = { grid:Grid, tilePush:Direction, nextTile:Tile}
+type GameState = { grid:Grid, tilePush:Direction, nextTile:Tile, tilesToPlace:Int}
 
 emptyGrid : Grid
 emptyGrid = Grid <| repeat 4 <| repeat 4 <| Empty
@@ -36,6 +36,14 @@ setTile (i, j) (Grid g) t = let
         nr = (take i r) ++ [t] ++ (drop (i+1) r)
     in Grid <| (take j g) ++ [nr] ++ (drop (j+1) g)
 
+emptyTiles : Grid -> [(Int, Int)]
+emptyTiles (Grid g) = map (\(_,i,j) -> (i,j)) 
+                   <| filter (\(t,_,_) -> t == Empty) 
+                   <| concat
+                   <| zipWith (\j r -> map (\(t,i) -> (t,i,j)) r) [0..3] 
+                   <| map (\r -> zip r [0..3]) 
+                   <| g
+
 defaultGame : GameState
-defaultGame = { grid = emptyGrid, tilePush = Up, nextTile = Empty }
+defaultGame = { grid = emptyGrid, tilePush = Up, nextTile = Empty, tilesToPlace = 3}
 

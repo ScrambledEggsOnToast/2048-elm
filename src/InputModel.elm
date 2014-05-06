@@ -30,9 +30,9 @@ userInput : Signal UserInput
 userInput = (\d -> {tilePushDirection = maybe Up id d}) <~ (dropIf (\d -> d==Nothing) Nothing <| dropRepeats arrowsDirection)
 
 randomFloats : Signal a -> Signal [Float]
-randomFloats s = Random.floatList <| sampleOn s <| constant 2
+randomFloats s = Random.floatList <| sampleOn userInput <| constant 2
 
 type Input = { timeDelta:Float, userInput:UserInput, randomFloats:[Float]}
 
-delta = fps 15
+delta = fps 30
 input = sampleOn delta <| Input <~ delta ~ userInput ~ (randomFloats delta)
