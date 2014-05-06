@@ -1,0 +1,40 @@
+Elm.Logic = Elm.Logic || {};
+Elm.Logic.make = function (_elm) {
+   "use strict";
+   _elm.Logic = _elm.Logic || {};
+   if (_elm.Logic.values)
+   return _elm.Logic.values;
+   var _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _E = _N.Error.make(_elm),
+   $moduleName = "Logic";
+   var Basics = Elm.Basics.make(_elm);
+   var Color = Elm.Color.make(_elm);
+   var GameModel = Elm.GameModel.make(_elm);
+   var Graphics = Graphics || {};
+   Graphics.Collage = Elm.Graphics.Collage.make(_elm);
+   var Graphics = Graphics || {};
+   Graphics.Element = Elm.Graphics.Element.make(_elm);
+   var InputModel = Elm.InputModel.make(_elm);
+   var List = Elm.List.make(_elm);
+   var Maybe = Elm.Maybe.make(_elm);
+   var Native = Native || {};
+   Native.Json = Elm.Native.Json.make(_elm);
+   var Native = Native || {};
+   Native.Ports = Elm.Native.Ports.make(_elm);
+   var Signal = Elm.Signal.make(_elm);
+   var String = Elm.String.make(_elm);
+   var Text = Elm.Text.make(_elm);
+   var Time = Elm.Time.make(_elm);
+   var _op = {};
+   var stepGame = F2(function (input,
+   gameState) {
+      return _U.replace([["tilePush"
+                         ,input.userInput.tilePushDirection]],
+      gameState);
+   });
+   _elm.Logic.values = {_op: _op
+                       ,stepGame: stepGame};
+   return _elm.Logic.values;
+};

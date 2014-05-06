@@ -1,0 +1,55 @@
+Elm.Main = Elm.Main || {};
+Elm.Main.make = function (_elm) {
+   "use strict";
+   _elm.Main = _elm.Main || {};
+   if (_elm.Main.values)
+   return _elm.Main.values;
+   var _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _E = _N.Error.make(_elm),
+   $moduleName = "Main";
+   var Basics = Elm.Basics.make(_elm);
+   var Color = Elm.Color.make(_elm);
+   var GameModel = Elm.GameModel.make(_elm);
+   var Graphics = Graphics || {};
+   Graphics.Collage = Elm.Graphics.Collage.make(_elm);
+   var Graphics = Graphics || {};
+   Graphics.Element = Elm.Graphics.Element.make(_elm);
+   var InputModel = Elm.InputModel.make(_elm);
+   var List = Elm.List.make(_elm);
+   var Logic = Elm.Logic.make(_elm);
+   var Maybe = Elm.Maybe.make(_elm);
+   var Native = Native || {};
+   Native.Json = Elm.Native.Json.make(_elm);
+   var Native = Native || {};
+   Native.Ports = Elm.Native.Ports.make(_elm);
+   var Rendering = Elm.Rendering.make(_elm);
+   var Signal = Elm.Signal.make(_elm);
+   var String = Elm.String.make(_elm);
+   var Text = Elm.Text.make(_elm);
+   var Time = Elm.Time.make(_elm);
+   var Window = Elm.Window.make(_elm);
+   var _op = {};
+   var delta = Time.fps(30);
+   var input = A2(Signal.sampleOn,
+   delta,
+   A3(Signal.lift2,
+   InputModel.Input,
+   delta,
+   InputModel.userInput));
+   var gameState = A3(Signal.foldp,
+   Logic.stepGame,
+   GameModel.defaultGame,
+   input);
+   var main = A3(Signal.lift2,
+   Rendering.display,
+   Window.dimensions,
+   gameState);
+   _elm.Main.values = {_op: _op
+                      ,delta: delta
+                      ,input: input
+                      ,gameState: gameState
+                      ,main: main};
+   return _elm.Main.values;
+};

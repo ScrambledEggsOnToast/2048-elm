@@ -1,0 +1,56 @@
+Elm.GameModel = Elm.GameModel || {};
+Elm.GameModel.make = function (_elm) {
+   "use strict";
+   _elm.GameModel = _elm.GameModel || {};
+   if (_elm.GameModel.values)
+   return _elm.GameModel.values;
+   var _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _E = _N.Error.make(_elm),
+   $moduleName = "GameModel";
+   var Basics = Elm.Basics.make(_elm);
+   var Color = Elm.Color.make(_elm);
+   var Graphics = Graphics || {};
+   Graphics.Collage = Elm.Graphics.Collage.make(_elm);
+   var Graphics = Graphics || {};
+   Graphics.Element = Elm.Graphics.Element.make(_elm);
+   var InputModel = Elm.InputModel.make(_elm);
+   var List = Elm.List.make(_elm);
+   var Maybe = Elm.Maybe.make(_elm);
+   var Native = Native || {};
+   Native.Json = Elm.Native.Json.make(_elm);
+   var Native = Native || {};
+   Native.Ports = Elm.Native.Ports.make(_elm);
+   var Signal = Elm.Signal.make(_elm);
+   var String = Elm.String.make(_elm);
+   var Text = Elm.Text.make(_elm);
+   var Time = Elm.Time.make(_elm);
+   var _op = {};
+   var GameState = F2(function (a,
+   b) {
+      return {_: {}
+             ,grid: a
+             ,tilePush: b};
+   });
+   var Grid = function (a) {
+      return {ctor: "Grid",_0: a};
+   };
+   var Empty = {ctor: "Empty"};
+   var Number = function (a) {
+      return {ctor: "Number"
+             ,_0: a};
+   };
+   var defaultGrid = Grid(List.repeat(4)(List.repeat(4)(Number(4))));
+   var defaultGame = {_: {}
+                     ,grid: defaultGrid
+                     ,tilePush: Maybe.Nothing};
+   _elm.GameModel.values = {_op: _op
+                           ,defaultGrid: defaultGrid
+                           ,defaultGame: defaultGame
+                           ,Number: Number
+                           ,Empty: Empty
+                           ,Grid: Grid
+                           ,GameState: GameState};
+   return _elm.GameModel.values;
+};
