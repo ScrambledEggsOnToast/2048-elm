@@ -335,15 +335,24 @@ Elm.Logic.make = function (_elm) {
                           ,["tilesToPlace"
                            ,gameState.tilesToPlace - 1]],
       gameState) : _U.eq(input.userInput.tilePushDirection,
-      gameState.tilePush) ? gameState : _U.replace([["tilePush"
-                                                    ,input.userInput.tilePushDirection]
-                                                   ,["tilesToPlace"
-                                                    ,gameState.tilesToPlace + 1]
-                                                   ,["grid"
-                                                    ,A2(GameModel.slideGrid,
-                                                    input.userInput.tilePushDirection,
-                                                    gameState.grid)]],
-      gameState);
+      gameState.tilePush) ? gameState : _U.eq(input.userInput.tilePushDirection,
+      InputModel.None) ? _U.replace([["tilePush"
+                                     ,input.userInput.tilePushDirection]],
+      gameState) : function () {
+         var newGrid = A2(GameModel.slideGrid,
+         input.userInput.tilePushDirection,
+         gameState.grid);
+         return _U.eq(newGrid,
+         gameState.grid) ? gameState : _U.replace([["tilePush"
+                                                   ,input.userInput.tilePushDirection]
+                                                  ,["tilesToPlace"
+                                                   ,gameState.tilesToPlace + 1]
+                                                  ,["grid"
+                                                   ,A2(GameModel.slideGrid,
+                                                   input.userInput.tilePushDirection,
+                                                   gameState.grid)]],
+         gameState);
+      }();
    });
    _elm.Logic.values = {_op: _op
                        ,tile2Probability: tile2Probability
@@ -658,11 +667,7 @@ Elm.InputModel.make = function (_elm) {
       return {_: {}
              ,tilePushDirection: d};
    },
-   A2(Signal.dropIf,
-   function (d) {
-      return _U.eq(d,None);
-   },
-   None)(Signal.dropRepeats(arrowsDirection)));
+   Signal.dropRepeats(arrowsDirection));
    var input = Signal.sampleOn(delta)(A2(Signal._op["~"],
    A2(Signal._op["~"],
    A2(Signal._op["<~"],
@@ -733,58 +738,9 @@ Elm.Utils.make = function (_elm) {
             case "[]":
             return _L.fromArray([]);}
          _E.Case($moduleName,
-         "between lines 27 and 30");
+         "between lines 13 and 16");
       }();
    };
-   var span = F2(function (p,xs) {
-      return function () {
-         switch (xs.ctor)
-         {case "::":
-            return p(xs._0) ? function () {
-                 var $ = A2(span,p,xs._1),
-                 ys = $._0,
-                 zs = $._1;
-                 return {ctor: "_Tuple2"
-                        ,_0: {ctor: "::"
-                             ,_0: xs._0
-                             ,_1: ys}
-                        ,_1: zs};
-              }() : {ctor: "_Tuple2"
-                    ,_0: _L.fromArray([])
-                    ,_1: xs};
-            case "[]":
-            return {ctor: "_Tuple2"
-                   ,_0: xs
-                   ,_1: xs};}
-         _E.Case($moduleName,
-         "between lines 22 and 24");
-      }();
-   });
-   var groupBy = F2(function (eq,
-   a) {
-      return function () {
-         switch (a.ctor)
-         {case "::": return function () {
-                 var $ = A2(span,
-                 eq(a._0),
-                 a._1),
-                 ys = $._0,
-                 zs = $._1;
-                 return {ctor: "::"
-                        ,_0: {ctor: "::"
-                             ,_0: a._0
-                             ,_1: ys}
-                        ,_1: A2(groupBy,eq,zs)};
-              }();
-            case "[]":
-            return _L.fromArray([]);}
-         return _L.fromArray([]);
-      }();
-   });
-   var group = groupBy(F2(function (x,
-   y) {
-      return _U.eq(x,y);
-   }));
    var groupedByTwo = function (l) {
       return groupedByTwo$(A2(List.filter,
       function (x) {
@@ -822,9 +778,6 @@ Elm.Utils.make = function (_elm) {
    _elm.Utils.values = {_op: _op
                        ,groupedByTwo: groupedByTwo
                        ,groupedByTwo$: groupedByTwo$
-                       ,group: group
-                       ,groupBy: groupBy
-                       ,span: span
                        ,transpose: transpose};
    return _elm.Utils.values;
 };

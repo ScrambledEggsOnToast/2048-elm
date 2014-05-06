@@ -27,7 +27,7 @@ arrowsDirection = let toDirection ds wasds =
     in toDirection <~ Keyboard.arrows ~ Keyboard.wasd
 
 userInput : Signal UserInput
-userInput = (\d -> {tilePushDirection = d}) <~ (dropIf (\d -> d==None) None <| dropRepeats arrowsDirection)
+userInput = (\d -> {tilePushDirection = d}) <~ (dropRepeats arrowsDirection)
 
 randomFloats : Signal a -> Signal [Float]
 randomFloats s = Random.floatList <| sampleOn delta <| constant 2

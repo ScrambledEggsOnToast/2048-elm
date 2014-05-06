@@ -1,6 +1,6 @@
 module Logic where
 
-import InputModel (Input)
+import InputModel (Input, None)
 import GameModel (GameState, Tile, Number, Empty, Grid, setTile, readTile, emptyTiles, slideGrid)
 
 import Random
@@ -30,9 +30,15 @@ stepGame input gameState = if gameState.tilesToPlace > 0 then
                                   , grid <- setTile (maybe (0,0) id <| newTileIndex (last input.randomFloats) gameState.grid) gameState.grid gameState.nextTile
                                   , tilesToPlace <- gameState.tilesToPlace - 1
                            }
-                           else if input.userInput.tilePushDirection == gameState.tilePush then gameState else
+                           else if input.userInput.tilePushDirection == gameState.tilePush then gameState
+                           else if input.userInput.tilePushDirection == None then
                            { gameState | 
                                     tilePush <- input.userInput.tilePushDirection
-                                  , tilesToPlace <- gameState.tilesToPlace + 1
-                                  , grid <- slideGrid input.userInput.tilePushDirection gameState.grid
                            }
+                           else let newGrid = slideGrid input.userInput.tilePushDirection gameState.grid in
+                               if (newGrid == gameState.grid) then gameState else
+                               { gameState | 
+                                        tilePush <- input.userInput.tilePushDirection
+                                      , tilesToPlace <- gameState.tilesToPlace + 1
+                                      , grid <- slideGrid input.userInput.tilePushDirection gameState.grid
+                               }
