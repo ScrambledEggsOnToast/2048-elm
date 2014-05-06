@@ -8,10 +8,10 @@ Rendering
 
 ------------------------------------------------------------------------------}
 
-tileSize : Int
-tileSize = 90
+tileSize : Float
+tileSize = 106.25
 
-tileMargin : Int
+tileMargin : Float
 tileMargin = 15
 
 tileColor : Tile -> Color
@@ -55,23 +55,23 @@ tileTextStyle tile = {
 
 displayTile : Tile -> Element
 displayTile tile = case tile of 
-                    Number n -> collage tileSize tileSize 
+                    Number n -> collage (round tileSize) (round tileSize) 
                        [ 
-                         filled (tileColor tile) <| square <| toFloat tileSize
+                         filled (tileColor tile) <| square tileSize
                        , toForm <| centered <| style (tileTextStyle tile) <| toText <| show n
                        ]
-                    Empty -> collage tileSize tileSize 
-                       [ filled (tileColor tile) <| square <| toFloat tileSize ]
+                    Empty -> collage (round tileSize) (round tileSize) 
+                       [ filled (tileColor tile) <| square tileSize ]
 
 displayGrid : Grid -> Element
 displayGrid (Grid ts) = let
-                    gridBox = filled (rgb 187 173 160) <| square <| toFloat (4*tileSize + 5*tileMargin)
-                    tiles = map (\(t,i,j) -> move ((toFloat <| tileSize + tileMargin)*(i-1.5),(toFloat <| tileSize + tileMargin)*(j-1.5)) <| toForm <| displayTile t) 
+                    gridBox = filled (rgb 187 173 160) <| square (4*tileSize + 5*tileMargin)
+                    tiles = map (\(t,i,j) -> move ((tileSize + tileMargin)*(i-1.5),(tileSize + tileMargin)*(j-1.5)) <| toForm <| displayTile t) 
                         <| concat 
                         <| zipWith (\j r -> map (\(t,i) -> (t,i,j)) r) [0..3] 
                         <| map (\r -> zip r [0..3]) 
                         <| ts
-    in collage (4*tileSize + 5*tileMargin) (4*tileSize + 5*tileMargin) ([gridBox] ++ tiles)
+    in collage (round <| 4*tileSize + 5*tileMargin) (round <| 4*tileSize + 5*tileMargin) ([gridBox] ++ tiles)
 
 display : (Int,Int) -> GameState -> Element
 display (w,h) gameState = displayGrid gameState.grid

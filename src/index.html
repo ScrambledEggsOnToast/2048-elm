@@ -4,9 +4,12 @@
         <script type="text/javascript" src="http://elm-lang.org/elm-runtime.js"></script>
         <script type="text/javascript" src="Elm2048.js"></script>
     </head>
-    <body>
-        <h1>2048-elm</h1>
-        <div id="gameBoard" style="width:500px; height:500px; border-style:solid; border-width:2px;"></div>
+    <body style="background-color:#FAF8EF; color:#776E65; font-family: 'Clear Sans','Helvetica Neue',Arial,sans-serif;">
+        <div style="width:500px; margin: 0px auto; padding-top: 50px;">
+            <h1 style="font-size: 70px; font-weight: bold; margin: 0px;">2048-elm</h1>
+            <p>Join the numbers and get to the <strong>2048 tile!</strong></p>
+            <div id="gameBoard" style="width:500px; height:500px; margin-top: 30px;"></div>
+        </div>
     </body>
     <script type="text/javascript">
         var gameBoardDiv = document.getElementById('gameBoard');
