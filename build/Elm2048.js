@@ -31,10 +31,23 @@ Elm.Elm2048.make = function (_elm) {
    var Time = Elm.Time.make(_elm);
    var Window = Elm.Window.make(_elm);
    var _op = {};
+   var newGameButton = Native.Ports.portIn("newGameButton",
+   Native.Ports.incomingSignal(function (v) {
+      return typeof v === "boolean" ? v : _E.raise("invalid input, expecting JSBoolean but got " + v);
+   }));
+   var input = Signal.sampleOn(InputModel.delta)(A2(Signal._op["~"],
+   A2(Signal._op["~"],
+   A2(Signal._op["~"],
+   A2(Signal._op["<~"],
+   InputModel.Input,
+   InputModel.delta),
+   InputModel.userInput),
+   InputModel.randomFloats(InputModel.delta)),
+   newGameButton));
    var gameState = A3(Signal.foldp,
    Logic.stepGame,
    GameModel.defaultGame,
-   InputModel.input);
+   input);
    var main = A2(Signal._op["~"],
    A2(Signal._op["<~"],
    Rendering.display,
@@ -50,6 +63,7 @@ Elm.Elm2048.make = function (_elm) {
    },
    gameState));
    _elm.Elm2048.values = {_op: _op
+                         ,input: input
                          ,gameState: gameState
                          ,main: main};
    return _elm.Elm2048.values;
@@ -323,7 +337,7 @@ Elm.Logic.make = function (_elm) {
    };
    var stepGame = F2(function (input,
    gameState) {
-      return _U.eq(gameState.gameProgress,
+      return input.newGameButtonPressed ? GameModel.defaultGame : _U.eq(gameState.gameProgress,
       GameModel.Finished) ? gameState : List.and(_L.fromArray([GameModel.gridFull(gameState.grid)
                                                               ,_U.eq(gameState.gameProgress,
                                                               GameModel.InProgress)])) ? _U.replace([["gameProgress"
@@ -697,15 +711,17 @@ Elm.InputModel.make = function (_elm) {
    var Text = Elm.Text.make(_elm);
    var Time = Elm.Time.make(_elm);
    var _op = {};
-   var delta = Time.fps(30);
-   var Input = F3(function (a,
+   var Input = F4(function (a,
    b,
-   c) {
+   c,
+   d) {
       return {_: {}
+             ,newGameButtonPressed: d
              ,randomFloats: c
              ,timeDelta: a
              ,userInput: b};
    });
+   var delta = Time.fps(30);
    var randomFloats = function (s) {
       return Random.floatList(Signal.sampleOn(delta)(Signal.constant(2)));
    };
@@ -754,24 +770,13 @@ Elm.InputModel.make = function (_elm) {
       Keyboard.wasd);
    }();
    var userInput = A2(Signal._op["<~"],
-   function (d) {
-      return {_: {}
-             ,tilePushDirection: d};
-   },
+   UserInput,
    Signal.dropRepeats(arrowsDirection));
-   var input = Signal.sampleOn(delta)(A2(Signal._op["~"],
-   A2(Signal._op["~"],
-   A2(Signal._op["<~"],
-   Input,
-   delta),
-   userInput),
-   randomFloats(delta)));
    _elm.InputModel.values = {_op: _op
                             ,arrowsDirection: arrowsDirection
+                            ,delta: delta
                             ,userInput: userInput
                             ,randomFloats: randomFloats
-                            ,delta: delta
-                            ,input: input
                             ,Up: Up
                             ,Down: Down
                             ,Left: Left

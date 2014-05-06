@@ -26,13 +26,13 @@ arrowsDirection = let toDirection ds wasds =
                                          | otherwise -> None
     in toDirection <~ Keyboard.arrows ~ Keyboard.wasd
 
+delta = fps 30
+
 userInput : Signal UserInput
-userInput = (\d -> {tilePushDirection = d}) <~ (dropRepeats arrowsDirection)
+userInput = UserInput <~ (dropRepeats arrowsDirection)
 
 randomFloats : Signal a -> Signal [Float]
 randomFloats s = Random.floatList <| sampleOn delta <| constant 2
 
-type Input = { timeDelta:Float, userInput:UserInput, randomFloats:[Float]}
+type Input = { timeDelta:Float, userInput:UserInput, randomFloats:[Float], newGameButtonPressed:Bool}
 
-delta = fps 30
-input = sampleOn delta <| Input <~ delta ~ userInput ~ (randomFloats delta)

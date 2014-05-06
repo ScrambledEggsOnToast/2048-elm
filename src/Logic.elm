@@ -1,7 +1,7 @@
 module Logic where
 
 import InputModel (Input, None)
-import GameModel (GameState, Tile, Number, Empty, Grid, setTile, readTile, emptyTiles, slideGrid, gridFull, Finished, InProgress, Beginning)
+import GameModel (defaultGame, GameState, Tile, Number, Empty, Grid, setTile, readTile, emptyTiles, slideGrid, gridFull, Finished, InProgress, Beginning)
 
 import Random
 
@@ -24,7 +24,8 @@ newTileIndex x g = let emptyTileIndices = emptyTiles g
         otherwise -> Just <| head <| drop (floor <| (toFloat <| length emptyTileIndices) * x) emptyTileIndices
 
 stepGame : Input -> GameState -> GameState
-stepGame input gameState = if gameState.gameProgress == Finished then gameState
+stepGame input gameState = if input.newGameButtonPressed then defaultGame
+                           else if gameState.gameProgress == Finished then gameState
                            else if and [gridFull gameState.grid, gameState.gameProgress==InProgress] then 
                            { gameState | gameProgress <- Finished }
                            else if gameState.tilesToPlace > 0 then

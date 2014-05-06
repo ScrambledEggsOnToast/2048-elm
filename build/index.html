@@ -4,11 +4,14 @@
         <script type="text/javascript" src="http://elm-lang.org/elm-runtime.js"></script>
         <script type="text/javascript" src="Elm2048.js"></script>
     </head>
-    <body style="background-color:#FAF8EF; color:#776E65; font-family: 'Clear Sans','Helvetica Neue',Arial,sans-serif;">
+    <body onMouseUp="sendNewGame(false)" style="background-color:#FAF8EF; color:#776E65; font-family: 'Clear Sans','Helvetica Neue',Arial,sans-serif;">
         <div style="width:500px; margin: 0px auto; padding-top: 50px;">
             <h1 style="font-size: 70px; font-weight: bold; margin: 0px; float: left;">2048-elm</h1>
-            <div id="scoreContainer" style="text-align:center; width: 100px; background-color:#BBADA0; color: #FFF; border-radius: 5px; padding: 10px; margin-top: 20px; float: right;"><strong>SCORE<div id="score">0</div></strong></div>
-            <p style="clear: both;">Join the numbers and get to the <strong>2048 tile!</strong></p>
+            <div id="sideBits" style="float: right;">
+                <div id="scoreContainer" style="text-align:center; width: 100px; background-color:#BBADA0; color: #FFF; border-radius: 5px; padding: 10px; margin-top: 20px;"><strong>SCORE<div id="score">0</div></strong></div>
+                <div onMouseDown="sendNewGame(true)" id="newGameButton" style="text-align:center; background-color:#8F7A66; color: #FFF; border-radius: 5px; padding: 10px; margin-top: 10px; width: 100px; cursor: pointer; "><strong>New Game</strong></div>
+            </div>
+            <p style="clear: left;">Join the numbers and get to the <strong>2048 tile!</strong></p>
             <div id="gameBoard" style="width:500px; height:500px; margin-top: 30px; clear: both;"></div>
         </div>
     </body>
@@ -20,11 +23,15 @@
         }, false);
 
         var gameBoardDiv = document.getElementById('gameBoard');
-        var elm2048 = Elm.embed(Elm.Elm2048, gameBoardDiv);
+        var elm2048 = Elm.embed(Elm.Elm2048, gameBoardDiv, { newGameButton: false });
 
-        function showScore(x) { 
+        elm2048.ports.score.subscribe(function (x) { 
             document.getElementById('score').innerHTML=x;
+        });
+
+        function sendNewGame(a) {
+            elm2048.ports.newGameButton.send(a);
         }
-        elm2048.ports.score.subscribe(showScore);
+
     </script>
 </html>
