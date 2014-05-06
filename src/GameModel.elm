@@ -11,6 +11,7 @@ Game Model
 
 data Tile = Number Int | Empty
 data Grid = Grid [[Tile]]
+data Progress = Beginning | InProgress | Finished
 
 {-
 a grid is a list of lists, indexed by (i,j) it will be rendered as follows:
@@ -23,7 +24,7 @@ j
 0
 -}
 
-type GameState = { grid:Grid, tilePush:Direction, nextTile:Tile, tilesToPlace:Int}
+type GameState = { grid:Grid, tilePush:Direction, nextTile:Tile, tilesToPlace:Int, score:Int, gameProgress:Progress }
 
 emptyGrid : Grid
 emptyGrid = Grid <| repeat 4 <| repeat 4 <| Empty
@@ -55,20 +56,33 @@ intToTile n = case n of
     0 -> Empty
     otherwise -> Number n
 
-slideRow : [Tile] -> [Tile] -- slides list of tiles to left, merging tiles where necessary
-slideRow r = map intToTile <| take 4 <| ((map sum <| groupedByTwo <| map tileToInt r) ++ [0,0,0,0])
+slideRow : [Tile] -> ([Tile], Int) -- slides list of tiles to left, merging tiles where necessary
+slideRow r = let groupedInts = groupedByTwo <| map tileToInt r 
+    in ((map intToTile <| take 4 <| ((map sum groupedInts) ++ [0,0,0,0])), sum <| concat <| filter (\x -> length x > 1) groupedInts)
 
-
-
-slideGrid : Direction -> Grid -> Grid
+slideGrid : Direction -> Grid -> (Grid, Int)
 slideGrid dir (Grid g) = let h = case dir of
-                            Down -> transpose <| map slideRow <| transpose g
-                            Up -> transpose <| map (reverse . slideRow . reverse) <| transpose g
+                            Down -> (\x -> zip (transpose <| map fst x) (map snd x)) <| map slideRow <| transpose g
+                            Up -> (\x -> zip (transpose <| map fst x) (map snd x)) <| map (\(r,s) -> (reverse r,s)) <| map slideRow <| map reverse <| transpose g
                             Left -> map slideRow g
-                            Right -> map (reverse . slideRow . reverse) g
-                            otherwise -> g
-                        in Grid h
+                            Right -> map (\(r,s) -> (reverse r,s)) <| map slideRow <| map reverse g
+                            otherwise -> zip g [0,0,0,0]
+                        in (Grid (map fst h), sum <| map snd h)
+
+gridFull : Grid -> Bool
+gridFull g = let
+        up = fst <| slideGrid Up g
+        down = fst <| slideGrid Down g
+        left = fst <| slideGrid Left g
+        right = fst <| slideGrid Right g
+    in and 
+        [
+          up == down
+        , down == left
+        , left == right
+        ]
+      
 
 defaultGame : GameState
-defaultGame = { grid = emptyGrid, tilePush = None, nextTile = Empty, tilesToPlace = 3}
+defaultGame = { grid = emptyGrid, tilePush = None, nextTile = Empty, tilesToPlace = 3, score = 0, gameProgress = Beginning }
 

@@ -250,9 +250,9 @@ Elm.Rendering.make = function (_elm) {
               Basics.round(4 * tileSize + 5 * tileMargin),
               Basics.round(4 * tileSize + 5 * tileMargin),
               _L.fromArray([Graphics.Collage.toForm(displayGrid(gameState.grid))
-                           ,Graphics.Collage.toForm(Text.asText(_L.append(String.show(gameState.nextTile),
-                           _L.append(", ",
-                           String.show(gameState.tilePush)))))]));}
+                           ,Graphics.Collage.toForm(Text.asText(_L.append(String.show(gameState.gameProgress),
+                           _L.append(" ",
+                           String.show(gameState.score)))))]));}
          _E.Case($moduleName,
          "between lines 77 and 81");
       }();
@@ -320,7 +320,12 @@ Elm.Logic.make = function (_elm) {
    };
    var stepGame = F2(function (input,
    gameState) {
-      return _U.cmp(gameState.tilesToPlace,
+      return _U.eq(gameState.gameProgress,
+      GameModel.Finished) ? gameState : List.and(_L.fromArray([GameModel.gridFull(gameState.grid)
+                                                              ,_U.eq(gameState.gameProgress,
+                                                              GameModel.InProgress)])) ? _U.replace([["gameProgress"
+                                                                                                     ,GameModel.Finished]],
+      gameState) : _U.cmp(gameState.tilesToPlace,
       0) > 0 ? _U.replace([["nextTile"
                            ,newTile(List.head(input.randomFloats))]
                           ,["grid"
@@ -334,23 +339,26 @@ Elm.Logic.make = function (_elm) {
                            gameState.nextTile)]
                           ,["tilesToPlace"
                            ,gameState.tilesToPlace - 1]],
+      gameState) : _U.eq(gameState.gameProgress,
+      GameModel.Beginning) ? _U.replace([["gameProgress"
+                                         ,GameModel.InProgress]],
       gameState) : _U.eq(input.userInput.tilePushDirection,
       gameState.tilePush) ? gameState : _U.eq(input.userInput.tilePushDirection,
       InputModel.None) ? _U.replace([["tilePush"
                                      ,input.userInput.tilePushDirection]],
       gameState) : function () {
-         var newGrid = A2(GameModel.slideGrid,
+         var newGridScore = A2(GameModel.slideGrid,
          input.userInput.tilePushDirection,
          gameState.grid);
-         return _U.eq(newGrid,
+         return _U.eq(Basics.fst(newGridScore),
          gameState.grid) ? gameState : _U.replace([["tilePush"
                                                    ,input.userInput.tilePushDirection]
                                                   ,["tilesToPlace"
                                                    ,gameState.tilesToPlace + 1]
                                                   ,["grid"
-                                                   ,A2(GameModel.slideGrid,
-                                                   input.userInput.tilePushDirection,
-                                                   gameState.grid)]],
+                                                   ,Basics.fst(newGridScore)]
+                                                  ,["score"
+                                                   ,gameState.score + Basics.snd(newGridScore)]],
          gameState);
       }();
    });
@@ -390,16 +398,23 @@ Elm.GameModel.make = function (_elm) {
    var Time = Elm.Time.make(_elm);
    var Utils = Elm.Utils.make(_elm);
    var _op = {};
-   var GameState = F4(function (a,
+   var GameState = F6(function (a,
    b,
    c,
-   d) {
+   d,
+   e,
+   f) {
       return {_: {}
+             ,gameProgress: f
              ,grid: a
              ,nextTile: c
+             ,score: e
              ,tilePush: b
              ,tilesToPlace: d};
    });
+   var Finished = {ctor: "Finished"};
+   var InProgress = {ctor: "InProgress"};
+   var Beginning = {ctor: "Beginning"};
    var Grid = function (a) {
       return {ctor: "Grid",_0: a};
    };
@@ -413,10 +428,10 @@ Elm.GameModel.make = function (_elm) {
                  {case "_Tuple2":
                     return List.head(List.drop(_v0._0)(List.head(List.drop(_v0._1)(_v1._0))));}
                  _E.Case($moduleName,
-                 "on line 32, column 28 to 65");
+                 "on line 33, column 28 to 65");
               }();}
          _E.Case($moduleName,
-         "on line 32, column 28 to 65");
+         "on line 33, column 28 to 65");
       }();
    });
    var setTile = F3(function (_v7,
@@ -444,10 +459,10 @@ Elm.GameModel.make = function (_elm) {
                          _v8._0))));
                       }();}
                  _E.Case($moduleName,
-                 "between lines 35 and 38");
+                 "between lines 36 and 39");
               }();}
          _E.Case($moduleName,
-         "between lines 35 and 38");
+         "between lines 36 and 39");
       }();
    });
    var Empty = {ctor: "Empty"};
@@ -464,7 +479,7 @@ Elm.GameModel.make = function (_elm) {
                               ,_0: _v26._1
                               ,_1: _v26._2};}
                     _E.Case($moduleName,
-                    "on line 41, column 41 to 44");
+                    "on line 42, column 41 to 44");
                  }();
               })(List.filter(function (_v21) {
                  return function () {
@@ -472,7 +487,7 @@ Elm.GameModel.make = function (_elm) {
                     {case "_Tuple3":
                        return _U.eq(_v21._0,Empty);}
                     _E.Case($moduleName,
-                    "on line 42, column 43 to 53");
+                    "on line 43, column 43 to 53");
                  }();
               })(List.concat(A2(List.zipWith,
               F2(function (j,r) {
@@ -486,7 +501,7 @@ Elm.GameModel.make = function (_elm) {
                                  ,_1: _v17._1
                                  ,_2: j};}
                        _E.Case($moduleName,
-                       "on line 44, column 56 to 61");
+                       "on line 45, column 56 to 61");
                     }();
                  },
                  r);
@@ -498,12 +513,14 @@ Elm.GameModel.make = function (_elm) {
                  _L.range(0,3));
               })(_v14._0)))));}
          _E.Case($moduleName,
-         "between lines 41 and 46");
+         "between lines 42 and 47");
       }();
    };
    var defaultGame = {_: {}
+                     ,gameProgress: Beginning
                      ,grid: emptyGrid
                      ,nextTile: Empty
+                     ,score: 0
                      ,tilePush: InputModel.None
                      ,tilesToPlace: 3};
    var Number = function (a) {
@@ -525,10 +542,22 @@ Elm.GameModel.make = function (_elm) {
       }();
    };
    var slideRow = function (r) {
-      return List.map(intToTile)(List.take(4)(_L.append(List.map(List.sum)(Utils.groupedByTwo(A2(List.map,
-      tileToInt,
-      r))),
-      _L.fromArray([0,0,0,0]))));
+      return function () {
+         var groupedInts = Utils.groupedByTwo(A2(List.map,
+         tileToInt,
+         r));
+         return {ctor: "_Tuple2"
+                ,_0: List.map(intToTile)(List.take(4)(_L.append(A2(List.map,
+                List.sum,
+                groupedInts),
+                _L.fromArray([0,0,0,0]))))
+                ,_1: List.sum(List.concat(A2(List.filter,
+                function (x) {
+                   return _U.cmp(List.length(x),
+                   1) > 0;
+                },
+                groupedInts)))};
+      }();
    };
    var slideGrid = F2(function (dir,
    _v34) {
@@ -539,28 +568,83 @@ Elm.GameModel.make = function (_elm) {
                  var h = function () {
                     switch (dir.ctor)
                     {case "Down":
-                       return Utils.transpose(List.map(slideRow)(Utils.transpose(_v34._0)));
+                       return function (x) {
+                            return A2(List.zip,
+                            Utils.transpose(A2(List.map,
+                            Basics.fst,
+                            x)),
+                            A2(List.map,Basics.snd,x));
+                         }(List.map(slideRow)(Utils.transpose(_v34._0)));
                        case "Left": return A2(List.map,
                          slideRow,
                          _v34._0);
                        case "Right":
-                       return A2(List.map,
-                         function ($) {
-                            return List.reverse(slideRow(List.reverse($)));
-                         },
-                         _v34._0);
-                       case "Up":
-                       return Utils.transpose(List.map(function ($) {
-                            return List.reverse(slideRow(List.reverse($)));
-                         })(Utils.transpose(_v34._0)));}
-                    return _v34._0;
+                       return List.map(function (_v38) {
+                            return function () {
+                               switch (_v38.ctor)
+                               {case "_Tuple2":
+                                  return {ctor: "_Tuple2"
+                                         ,_0: List.reverse(_v38._0)
+                                         ,_1: _v38._1};}
+                               _E.Case($moduleName,
+                               "on line 68, column 54 to 65");
+                            }();
+                         })(List.map(slideRow)(A2(List.map,
+                         List.reverse,
+                         _v34._0)));
+                       case "Up": return function (x) {
+                            return A2(List.zip,
+                            Utils.transpose(A2(List.map,
+                            Basics.fst,
+                            x)),
+                            A2(List.map,Basics.snd,x));
+                         }(List.map(function (_v42) {
+                            return function () {
+                               switch (_v42.ctor)
+                               {case "_Tuple2":
+                                  return {ctor: "_Tuple2"
+                                         ,_0: List.reverse(_v42._0)
+                                         ,_1: _v42._1};}
+                               _E.Case($moduleName,
+                               "on line 66, column 103 to 114");
+                            }();
+                         })(List.map(slideRow)(List.map(List.reverse)(Utils.transpose(_v34._0)))));}
+                    return A2(List.zip,
+                    _v34._0,
+                    _L.fromArray([0,0,0,0]));
                  }();
-                 return Grid(h);
+                 return {ctor: "_Tuple2"
+                        ,_0: Grid(A2(List.map,
+                        Basics.fst,
+                        h))
+                        ,_1: List.sum(A2(List.map,
+                        Basics.snd,
+                        h))};
               }();}
          _E.Case($moduleName,
          "between lines 64 and 70");
       }();
    });
+   var gridFull = function (g) {
+      return function () {
+         var right = Basics.fst(A2(slideGrid,
+         InputModel.Right,
+         g));
+         var left = Basics.fst(A2(slideGrid,
+         InputModel.Left,
+         g));
+         var down = Basics.fst(A2(slideGrid,
+         InputModel.Down,
+         g));
+         var up = Basics.fst(A2(slideGrid,
+         InputModel.Up,
+         g));
+         return List.and(_L.fromArray([_U.eq(up,
+                                      down)
+                                      ,_U.eq(down,left)
+                                      ,_U.eq(left,right)]));
+      }();
+   };
    _elm.GameModel.values = {_op: _op
                            ,emptyGrid: emptyGrid
                            ,readTile: readTile
@@ -570,10 +654,14 @@ Elm.GameModel.make = function (_elm) {
                            ,intToTile: intToTile
                            ,slideRow: slideRow
                            ,slideGrid: slideGrid
+                           ,gridFull: gridFull
                            ,defaultGame: defaultGame
                            ,Number: Number
                            ,Empty: Empty
                            ,Grid: Grid
+                           ,Beginning: Beginning
+                           ,InProgress: InProgress
+                           ,Finished: Finished
                            ,GameState: GameState};
    return _elm.GameModel.values;
 };Elm.InputModel = Elm.InputModel || {};

@@ -77,6 +77,6 @@ display : (Int,Int) -> GameState -> Element
 display (w,h) gameState = collage (round <| 4*tileSize + 5*tileMargin) (round <| 4*tileSize + 5*tileMargin)
                 [
                   toForm <| displayGrid gameState.grid
-                , toForm <| asText <| (show gameState.nextTile) ++ ", " ++ (show gameState.tilePush)
+                , toForm <| asText <| (show gameState.gameProgress) ++ " " ++ (show gameState.score) 
                 ]
 

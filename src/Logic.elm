@@ -1,7 +1,7 @@
 module Logic where
 
 import InputModel (Input, None)
-import GameModel (GameState, Tile, Number, Empty, Grid, setTile, readTile, emptyTiles, slideGrid)
+import GameModel (GameState, Tile, Number, Empty, Grid, setTile, readTile, emptyTiles, slideGrid, gridFull, Finished, InProgress, Beginning)
 
 import Random
 
@@ -24,21 +24,27 @@ newTileIndex x g = let emptyTileIndices = emptyTiles g
         otherwise -> Just <| head <| drop (floor <| (toFloat <| length emptyTileIndices) * x) emptyTileIndices
 
 stepGame : Input -> GameState -> GameState
-stepGame input gameState = if gameState.tilesToPlace > 0 then
+stepGame input gameState = if gameState.gameProgress == Finished then gameState
+                           else if and [gridFull gameState.grid, gameState.gameProgress==InProgress] then 
+                           { gameState | gameProgress <- Finished }
+                           else if gameState.tilesToPlace > 0 then
                            { gameState |
                                     nextTile <- newTile <| head <| input.randomFloats
                                   , grid <- setTile (maybe (0,0) id <| newTileIndex (last input.randomFloats) gameState.grid) gameState.grid gameState.nextTile
                                   , tilesToPlace <- gameState.tilesToPlace - 1
                            }
+                           else if gameState.gameProgress == Beginning then
+                           { gameState | gameProgress <- InProgress }
                            else if input.userInput.tilePushDirection == gameState.tilePush then gameState
                            else if input.userInput.tilePushDirection == None then
                            { gameState | 
                                     tilePush <- input.userInput.tilePushDirection
                            }
-                           else let newGrid = slideGrid input.userInput.tilePushDirection gameState.grid in
-                               if (newGrid == gameState.grid) then gameState else
+                           else let newGridScore = slideGrid input.userInput.tilePushDirection gameState.grid in
+                               if (fst newGridScore == gameState.grid) then gameState else
                                { gameState | 
                                         tilePush <- input.userInput.tilePushDirection
                                       , tilesToPlace <- gameState.tilesToPlace + 1
-                                      , grid <- slideGrid input.userInput.tilePushDirection gameState.grid
+                                      , grid <- fst newGridScore
+                                      , score <- gameState.score + snd newGridScore
                                }
