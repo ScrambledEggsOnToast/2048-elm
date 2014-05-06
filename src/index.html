@@ -3,16 +3,68 @@
         <title> 2048-elm </title>
         <script type="text/javascript" src="http://elm-lang.org/elm-runtime.js"></script>
         <script type="text/javascript" src="Elm2048.js"></script>
+        <style>
+body {
+    background-color: #FAF8EF; 
+    color: #776E65; 
+    font-family: 'Clear Sans','Helvetica Neue',Arial,sans-serif;
+}
+
+#container {
+    width: 500px; 
+    margin: 0px auto; 
+    padding-top: 50px;
+}
+
+h1 {
+    font-size: 70px; 
+    font-weight: bold; 
+    margin: 0px; 
+    float: left;
+}
+
+#sideBits {
+    float: right;
+}
+
+#sideBits #scoreContainer {
+    text-align: center; 
+    width: 100px; 
+    background-color: #BBADA0; 
+    color: #FFF; 
+    border-radius: 5px; 
+    padding: 10px; 
+    margin-top: 20px;
+}
+
+#sideBits #newGameButton {
+    text-align: center; 
+    background-color:#8F7A66; 
+    color: #FFF; 
+    border-radius: 5px; 
+    padding: 10px; 
+    margin-top: 10px; 
+    width: 100px; 
+    cursor: pointer; 
+}
+
+#gameBoard {
+    width: 500px; 
+    height: 500px; 
+    margin-top: 30px; 
+    clear: both;
+}
+        </style>
     </head>
-    <body onMouseUp="sendNewGame(false)" style="background-color:#FAF8EF; color:#776E65; font-family: 'Clear Sans','Helvetica Neue',Arial,sans-serif;">
-        <div style="width:500px; margin: 0px auto; padding-top: 50px;">
-            <h1 style="font-size: 70px; font-weight: bold; margin: 0px; float: left;">2048-elm</h1>
-            <div id="sideBits" style="float: right;">
-                <div id="scoreContainer" style="text-align:center; width: 100px; background-color:#BBADA0; color: #FFF; border-radius: 5px; padding: 10px; margin-top: 20px;"><strong>SCORE<div id="score">0</div></strong></div>
-                <div onMouseDown="sendNewGame(true)" id="newGameButton" style="text-align:center; background-color:#8F7A66; color: #FFF; border-radius: 5px; padding: 10px; margin-top: 10px; width: 100px; cursor: pointer; "><strong>New Game</strong></div>
+    <body onMouseUp="sendNewGame(false)">
+        <div id="container">
+            <h1>2048-elm</h1>
+            <div id="sideBits" >
+                <div id="scoreContainer"><strong>SCORE<div id="score">0</div></strong></div>
+                <div onMouseDown="sendNewGame(true)" id="newGameButton"><strong>New Game</strong></div>
             </div>
             <p style="clear: left;">Join the numbers and get to the <strong>2048 tile!</strong></p>
-            <div id="gameBoard" style="width:500px; height:500px; margin-top: 30px; clear: both;"></div>
+            <div id="gameBoard" style=""></div>
         </div>
     </body>
     <script type="text/javascript">
