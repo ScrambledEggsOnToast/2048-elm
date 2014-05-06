@@ -6,9 +6,10 @@
     </head>
     <body style="background-color:#FAF8EF; color:#776E65; font-family: 'Clear Sans','Helvetica Neue',Arial,sans-serif;">
         <div style="width:500px; margin: 0px auto; padding-top: 50px;">
-            <h1 style="font-size: 70px; font-weight: bold; margin: 0px;">2048-elm</h1>
-            <p>Join the numbers and get to the <strong>2048 tile!</strong></p>
-            <div id="gameBoard" style="width:500px; height:500px; margin-top: 30px;"></div>
+            <h1 style="font-size: 70px; font-weight: bold; margin: 0px; float: left;">2048-elm</h1>
+            <div id="scoreContainer" style="text-align:center; width: 100px; background-color:#BBADA0; color: #FFF; border-radius: 5px; padding: 10px; margin-top: 20px; float: right;"><strong>SCORE<div id="score">0</div></strong></div>
+            <p style="clear: both;">Join the numbers and get to the <strong>2048 tile!</strong></p>
+            <div id="gameBoard" style="width:500px; height:500px; margin-top: 30px; clear: both;"></div>
         </div>
     </body>
     <script type="text/javascript">
@@ -19,6 +20,11 @@
         }, false);
 
         var gameBoardDiv = document.getElementById('gameBoard');
-        Elm.embed(Elm.Elm2048, gameBoardDiv);
+        var elm2048 = Elm.embed(Elm.Elm2048, gameBoardDiv);
+
+        function showScore(x) { 
+            document.getElementById('score').innerHTML=x;
+        }
+        elm2048.ports.score.subscribe(showScore);
     </script>
 </html>

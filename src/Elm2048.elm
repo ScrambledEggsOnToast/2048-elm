@@ -7,6 +7,8 @@ import GameModel (defaultGame)
 import Logic (stepGame)
 import Rendering (display)
 
+port score : Signal Int
+port score = (\x -> x.score) <~ gameState
 
 gameState = foldp stepGame defaultGame input
 

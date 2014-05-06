@@ -40,6 +40,15 @@ Elm.Elm2048.make = function (_elm) {
    Rendering.display,
    Window.dimensions),
    gameState);
+   var score = Native.Ports.portOut("score",
+   Native.Ports.outgoingSignal(function (v) {
+      return v;
+   }),
+   A2(Signal._op["<~"],
+   function (x) {
+      return x.score;
+   },
+   gameState));
    _elm.Elm2048.values = {_op: _op
                          ,gameState: gameState
                          ,main: main};
@@ -246,15 +255,9 @@ Elm.Rendering.make = function (_elm) {
       return function () {
          switch (_v20.ctor)
          {case "_Tuple2":
-            return A3(Graphics.Collage.collage,
-              Basics.round(4 * tileSize + 5 * tileMargin),
-              Basics.round(4 * tileSize + 5 * tileMargin),
-              _L.fromArray([Graphics.Collage.toForm(displayGrid(gameState.grid))
-                           ,Graphics.Collage.toForm(Text.asText(_L.append(String.show(gameState.gameProgress),
-                           _L.append(" ",
-                           String.show(gameState.score)))))]));}
+            return displayGrid(gameState.grid);}
          _E.Case($moduleName,
-         "between lines 77 and 81");
+         "on line 77, column 27 to 53");
       }();
    });
    _elm.Rendering.values = {_op: _op
