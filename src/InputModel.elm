@@ -9,28 +9,28 @@ Input Model
 
 ------------------------------------------------------------------------------}
 
-data Direction = Up | Down | Left | Right 
+data Direction = Up | Down | Left | Right | None
 
 type UserInput = { tilePushDirection: Direction }
 
-arrowsDirection : Signal (Maybe Direction)
+arrowsDirection : Signal Direction
 arrowsDirection = let toDirection ds wasds = 
-                                      if | ds == {x=0,y=1} -> Just Up
-                                         | ds == {x=0,y=-1} -> Just Down
-                                         | ds == {x=1,y=0} -> Just Right
-                                         | ds == {x=-1,y=0} -> Just Left
-                                         | wasds == {x=0,y=1} -> Just Up
-                                         | wasds == {x=0,y=-1} -> Just Down
-                                         | wasds == {x=1,y=0} -> Just Right
-                                         | wasds == {x=-1,y=0} -> Just Left
-                                         | otherwise -> Nothing
+                                      if | ds == {x=0,y=1} -> Up
+                                         | ds == {x=0,y=-1} -> Down
+                                         | ds == {x=1,y=0} -> Right
+                                         | ds == {x=-1,y=0} -> Left
+                                         | wasds == {x=0,y=1} -> Up
+                                         | wasds == {x=0,y=-1} -> Down
+                                         | wasds == {x=1,y=0} -> Right
+                                         | wasds == {x=-1,y=0} -> Left
+                                         | otherwise -> None
     in toDirection <~ Keyboard.arrows ~ Keyboard.wasd
 
 userInput : Signal UserInput
-userInput = (\d -> {tilePushDirection = maybe Up id d}) <~ (dropIf (\d -> d==Nothing) Nothing <| dropRepeats arrowsDirection)
+userInput = (\d -> {tilePushDirection = d}) <~ (dropIf (\d -> d==None) None <| dropRepeats arrowsDirection)
 
 randomFloats : Signal a -> Signal [Float]
-randomFloats s = Random.floatList <| sampleOn userInput <| constant 2
+randomFloats s = Random.floatList <| sampleOn delta <| constant 2
 
 type Input = { timeDelta:Float, userInput:UserInput, randomFloats:[Float]}
 

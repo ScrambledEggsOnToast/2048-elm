@@ -1,7 +1,7 @@
 module Logic where
 
 import InputModel (Input)
-import GameModel (GameState, Tile, Number, Empty, Grid, setTile, readTile, emptyTiles)
+import GameModel (GameState, Tile, Number, Empty, Grid, setTile, readTile, emptyTiles, slideGrid)
 
 import Random
 
@@ -34,4 +34,5 @@ stepGame input gameState = if gameState.tilesToPlace > 0 then
                            { gameState | 
                                     tilePush <- input.userInput.tilePushDirection
                                   , tilesToPlace <- gameState.tilesToPlace + 1
+                                  , grid <- slideGrid input.userInput.tilePushDirection gameState.grid
                            }

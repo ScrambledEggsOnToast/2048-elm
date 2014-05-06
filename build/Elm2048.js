@@ -338,7 +338,11 @@ Elm.Logic.make = function (_elm) {
       gameState.tilePush) ? gameState : _U.replace([["tilePush"
                                                     ,input.userInput.tilePushDirection]
                                                    ,["tilesToPlace"
-                                                    ,gameState.tilesToPlace + 1]],
+                                                    ,gameState.tilesToPlace + 1]
+                                                   ,["grid"
+                                                    ,A2(GameModel.slideGrid,
+                                                    input.userInput.tilePushDirection,
+                                                    gameState.grid)]],
       gameState);
    });
    _elm.Logic.values = {_op: _op
@@ -375,6 +379,7 @@ Elm.GameModel.make = function (_elm) {
    var String = Elm.String.make(_elm);
    var Text = Elm.Text.make(_elm);
    var Time = Elm.Time.make(_elm);
+   var Utils = Elm.Utils.make(_elm);
    var _op = {};
    var GameState = F4(function (a,
    b,
@@ -399,10 +404,10 @@ Elm.GameModel.make = function (_elm) {
                  {case "_Tuple2":
                     return List.head(List.drop(_v0._0)(List.head(List.drop(_v0._1)(_v1._0))));}
                  _E.Case($moduleName,
-                 "on line 31, column 28 to 65");
+                 "on line 32, column 28 to 65");
               }();}
          _E.Case($moduleName,
-         "on line 31, column 28 to 65");
+         "on line 32, column 28 to 65");
       }();
    });
    var setTile = F3(function (_v7,
@@ -430,10 +435,10 @@ Elm.GameModel.make = function (_elm) {
                          _v8._0))));
                       }();}
                  _E.Case($moduleName,
-                 "between lines 34 and 37");
+                 "between lines 35 and 38");
               }();}
          _E.Case($moduleName,
-         "between lines 34 and 37");
+         "between lines 35 and 38");
       }();
    });
    var Empty = {ctor: "Empty"};
@@ -450,7 +455,7 @@ Elm.GameModel.make = function (_elm) {
                               ,_0: _v26._1
                               ,_1: _v26._2};}
                     _E.Case($moduleName,
-                    "on line 40, column 41 to 44");
+                    "on line 41, column 41 to 44");
                  }();
               })(List.filter(function (_v21) {
                  return function () {
@@ -458,7 +463,7 @@ Elm.GameModel.make = function (_elm) {
                     {case "_Tuple3":
                        return _U.eq(_v21._0,Empty);}
                     _E.Case($moduleName,
-                    "on line 41, column 43 to 53");
+                    "on line 42, column 43 to 53");
                  }();
               })(List.concat(A2(List.zipWith,
               F2(function (j,r) {
@@ -472,7 +477,7 @@ Elm.GameModel.make = function (_elm) {
                                  ,_1: _v17._1
                                  ,_2: j};}
                        _E.Case($moduleName,
-                       "on line 43, column 56 to 61");
+                       "on line 44, column 56 to 61");
                     }();
                  },
                  r);
@@ -484,23 +489,78 @@ Elm.GameModel.make = function (_elm) {
                  _L.range(0,3));
               })(_v14._0)))));}
          _E.Case($moduleName,
-         "between lines 40 and 45");
+         "between lines 41 and 46");
       }();
    };
    var defaultGame = {_: {}
                      ,grid: emptyGrid
                      ,nextTile: Empty
-                     ,tilePush: InputModel.Up
+                     ,tilePush: InputModel.None
                      ,tilesToPlace: 3};
    var Number = function (a) {
       return {ctor: "Number"
              ,_0: a};
    };
+   var tileToInt = function (t) {
+      return function () {
+         switch (t.ctor)
+         {case "Number": return t._0;}
+         return 0;
+      }();
+   };
+   var intToTile = function (n) {
+      return function () {
+         switch (n)
+         {case 0: return Empty;}
+         return Number(n);
+      }();
+   };
+   var slideRow = function (r) {
+      return List.map(intToTile)(List.take(4)(_L.append(List.map(List.sum)(Utils.groupedByTwo(A2(List.map,
+      tileToInt,
+      r))),
+      _L.fromArray([0,0,0,0]))));
+   };
+   var slideGrid = F2(function (dir,
+   _v34) {
+      return function () {
+         switch (_v34.ctor)
+         {case "Grid":
+            return function () {
+                 var h = function () {
+                    switch (dir.ctor)
+                    {case "Down":
+                       return Utils.transpose(List.map(slideRow)(Utils.transpose(_v34._0)));
+                       case "Left": return A2(List.map,
+                         slideRow,
+                         _v34._0);
+                       case "Right":
+                       return A2(List.map,
+                         function ($) {
+                            return List.reverse(slideRow(List.reverse($)));
+                         },
+                         _v34._0);
+                       case "Up":
+                       return Utils.transpose(List.map(function ($) {
+                            return List.reverse(slideRow(List.reverse($)));
+                         })(Utils.transpose(_v34._0)));}
+                    return _v34._0;
+                 }();
+                 return Grid(h);
+              }();}
+         _E.Case($moduleName,
+         "between lines 64 and 70");
+      }();
+   });
    _elm.GameModel.values = {_op: _op
                            ,emptyGrid: emptyGrid
                            ,readTile: readTile
                            ,setTile: setTile
                            ,emptyTiles: emptyTiles
+                           ,tileToInt: tileToInt
+                           ,intToTile: intToTile
+                           ,slideRow: slideRow
+                           ,slideGrid: slideGrid
                            ,defaultGame: defaultGame
                            ,Number: Number
                            ,Empty: Empty
@@ -546,10 +606,14 @@ Elm.InputModel.make = function (_elm) {
              ,timeDelta: a
              ,userInput: b};
    });
+   var randomFloats = function (s) {
+      return Random.floatList(Signal.sampleOn(delta)(Signal.constant(2)));
+   };
    var UserInput = function (a) {
       return {_: {}
              ,tilePushDirection: a};
    };
+   var None = {ctor: "None"};
    var Right = {ctor: "Right"};
    var Left = {ctor: "Left"};
    var Down = {ctor: "Down"};
@@ -560,28 +624,28 @@ Elm.InputModel.make = function (_elm) {
          return _U.eq(ds,
          {_: {}
          ,x: 0
-         ,y: 1}) ? Maybe.Just(Up) : _U.eq(ds,
+         ,y: 1}) ? Up : _U.eq(ds,
          {_: {}
          ,x: 0
-         ,y: -1}) ? Maybe.Just(Down) : _U.eq(ds,
+         ,y: -1}) ? Down : _U.eq(ds,
          {_: {}
          ,x: 1
-         ,y: 0}) ? Maybe.Just(Right) : _U.eq(ds,
+         ,y: 0}) ? Right : _U.eq(ds,
          {_: {}
          ,x: -1
-         ,y: 0}) ? Maybe.Just(Left) : _U.eq(wasds,
+         ,y: 0}) ? Left : _U.eq(wasds,
          {_: {}
          ,x: 0
-         ,y: 1}) ? Maybe.Just(Up) : _U.eq(wasds,
+         ,y: 1}) ? Up : _U.eq(wasds,
          {_: {}
          ,x: 0
-         ,y: -1}) ? Maybe.Just(Down) : _U.eq(wasds,
+         ,y: -1}) ? Down : _U.eq(wasds,
          {_: {}
          ,x: 1
-         ,y: 0}) ? Maybe.Just(Right) : _U.eq(wasds,
+         ,y: 0}) ? Right : _U.eq(wasds,
          {_: {}
          ,x: -1
-         ,y: 0}) ? Maybe.Just(Left) : Maybe.Nothing;
+         ,y: 0}) ? Left : None;
       });
       return A2(Signal._op["~"],
       A2(Signal._op["<~"],
@@ -592,20 +656,13 @@ Elm.InputModel.make = function (_elm) {
    var userInput = A2(Signal._op["<~"],
    function (d) {
       return {_: {}
-             ,tilePushDirection: A3(Maybe.maybe,
-             Up,
-             Basics.id,
-             d)};
+             ,tilePushDirection: d};
    },
    A2(Signal.dropIf,
    function (d) {
-      return _U.eq(d,
-      Maybe.Nothing);
+      return _U.eq(d,None);
    },
-   Maybe.Nothing)(Signal.dropRepeats(arrowsDirection)));
-   var randomFloats = function (s) {
-      return Random.floatList(Signal.sampleOn(userInput)(Signal.constant(2)));
-   };
+   None)(Signal.dropRepeats(arrowsDirection)));
    var input = Signal.sampleOn(delta)(A2(Signal._op["~"],
    A2(Signal._op["~"],
    A2(Signal._op["<~"],
@@ -623,7 +680,151 @@ Elm.InputModel.make = function (_elm) {
                             ,Down: Down
                             ,Left: Left
                             ,Right: Right
+                            ,None: None
                             ,UserInput: UserInput
                             ,Input: Input};
    return _elm.InputModel.values;
+};Elm.Utils = Elm.Utils || {};
+Elm.Utils.make = function (_elm) {
+   "use strict";
+   _elm.Utils = _elm.Utils || {};
+   if (_elm.Utils.values)
+   return _elm.Utils.values;
+   var _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _E = _N.Error.make(_elm),
+   $moduleName = "Utils";
+   var Basics = Elm.Basics.make(_elm);
+   var Color = Elm.Color.make(_elm);
+   var Graphics = Graphics || {};
+   Graphics.Collage = Elm.Graphics.Collage.make(_elm);
+   var Graphics = Graphics || {};
+   Graphics.Element = Elm.Graphics.Element.make(_elm);
+   var List = Elm.List.make(_elm);
+   var Maybe = Elm.Maybe.make(_elm);
+   var Native = Native || {};
+   Native.Json = Elm.Native.Json.make(_elm);
+   var Native = Native || {};
+   Native.Ports = Elm.Native.Ports.make(_elm);
+   var Signal = Elm.Signal.make(_elm);
+   var String = Elm.String.make(_elm);
+   var Text = Elm.Text.make(_elm);
+   var Time = Elm.Time.make(_elm);
+   var _op = {};
+   var transpose = function (ll) {
+      return function () {
+         switch (ll.ctor)
+         {case "::": switch (ll._0.ctor)
+              {case "::": return {ctor: "::"
+                                 ,_0: {ctor: "::"
+                                      ,_0: ll._0._0
+                                      ,_1: A2(List.map,
+                                      List.head,
+                                      ll._1)}
+                                 ,_1: transpose({ctor: "::"
+                                                ,_0: ll._0._1
+                                                ,_1: A2(List.map,
+                                                List.tail,
+                                                ll._1)})};
+                 case "[]":
+                 return transpose(ll._1);}
+              break;
+            case "[]":
+            return _L.fromArray([]);}
+         _E.Case($moduleName,
+         "between lines 27 and 30");
+      }();
+   };
+   var span = F2(function (p,xs) {
+      return function () {
+         switch (xs.ctor)
+         {case "::":
+            return p(xs._0) ? function () {
+                 var $ = A2(span,p,xs._1),
+                 ys = $._0,
+                 zs = $._1;
+                 return {ctor: "_Tuple2"
+                        ,_0: {ctor: "::"
+                             ,_0: xs._0
+                             ,_1: ys}
+                        ,_1: zs};
+              }() : {ctor: "_Tuple2"
+                    ,_0: _L.fromArray([])
+                    ,_1: xs};
+            case "[]":
+            return {ctor: "_Tuple2"
+                   ,_0: xs
+                   ,_1: xs};}
+         _E.Case($moduleName,
+         "between lines 22 and 24");
+      }();
+   });
+   var groupBy = F2(function (eq,
+   a) {
+      return function () {
+         switch (a.ctor)
+         {case "::": return function () {
+                 var $ = A2(span,
+                 eq(a._0),
+                 a._1),
+                 ys = $._0,
+                 zs = $._1;
+                 return {ctor: "::"
+                        ,_0: {ctor: "::"
+                             ,_0: a._0
+                             ,_1: ys}
+                        ,_1: A2(groupBy,eq,zs)};
+              }();
+            case "[]":
+            return _L.fromArray([]);}
+         return _L.fromArray([]);
+      }();
+   });
+   var group = groupBy(F2(function (x,
+   y) {
+      return _U.eq(x,y);
+   }));
+   var groupedByTwo = function (l) {
+      return groupedByTwo$(A2(List.filter,
+      function (x) {
+         return !_U.eq(x,0);
+      },
+      l));
+   };
+   var groupedByTwo$ = function (l) {
+      return function () {
+         switch (l.ctor)
+         {case "::": switch (l._1.ctor)
+              {case "::":
+                 switch (l._1._1.ctor)
+                   {case "[]": return _U.eq(l._0,
+                        l._1._0) ? _L.fromArray([_L.fromArray([l._0
+                                                              ,l._1._0])]) : _L.fromArray([_L.fromArray([l._0])
+                                                                                          ,_L.fromArray([l._1._0])]);}
+                   return _U.eq(l._0,
+                   l._1._0) ? {ctor: "::"
+                              ,_0: _L.fromArray([l._0
+                                                ,l._1._0])
+                              ,_1: groupedByTwo(l._1._1)} : {ctor: "::"
+                                                            ,_0: _L.fromArray([l._0])
+                                                            ,_1: groupedByTwo({ctor: "::"
+                                                                              ,_0: l._1._0
+                                                                              ,_1: l._1._1})};
+                 case "[]":
+                 return _L.fromArray([_L.fromArray([l._0])]);}
+              break;
+            case "[]":
+            return _L.fromArray([]);}
+         return _L.fromArray([]);
+      }();
+   };
+   _elm.Utils.values = {_op: _op
+                       ,groupedByTwo: groupedByTwo
+                       ,groupedByTwo$: groupedByTwo$
+                       ,group: group
+                       ,groupBy: groupBy
+                       ,span: span
+                       ,transpose: transpose};
+   return _elm.Utils.values;
 };
