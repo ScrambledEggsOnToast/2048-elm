@@ -1,4 +1,4 @@
-module Main where
+module Elm2048 where
 
 import Window
 

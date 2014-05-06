@@ -1,0 +1,15 @@
+<html>
+    <head>
+        <title> 2048-elm </title>
+        <script type="text/javascript" src="http://elm-lang.org/elm-runtime.js"></script>
+        <script type="text/javascript" src="Elm2048.js"></script>
+    </head>
+    <body>
+        <h1>2048-elm</h1>
+        <div id="gameBoard" style="width:500px; height:500px; border-style:solid; border-width:2px;"></div>
+    </body>
+    <script type="text/javascript">
+        var gameBoardDiv = document.getElementById('gameBoard');
+        Elm.embed(Elm.Elm2048, gameBoardDiv);
+    </script>
+</html>
