@@ -31,24 +31,16 @@ Elm.Elm2048.make = function (_elm) {
    var Time = Elm.Time.make(_elm);
    var Window = Elm.Window.make(_elm);
    var _op = {};
-   var delta = Time.fps(30);
-   var input = A2(Signal.sampleOn,
-   delta,
-   A3(Signal.lift2,
-   InputModel.Input,
-   delta,
-   InputModel.userInput));
    var gameState = A3(Signal.foldp,
    Logic.stepGame,
    GameModel.defaultGame,
-   input);
-   var main = A3(Signal.lift2,
+   InputModel.input);
+   var main = A2(Signal._op["~"],
+   A2(Signal._op["<~"],
    Rendering.display,
-   Window.dimensions,
+   Window.dimensions),
    gameState);
    _elm.Elm2048.values = {_op: _op
-                         ,delta: delta
-                         ,input: input
                          ,gameState: gameState
                          ,main: main};
    return _elm.Elm2048.values;
@@ -254,9 +246,15 @@ Elm.Rendering.make = function (_elm) {
       return function () {
          switch (_v20.ctor)
          {case "_Tuple2":
-            return displayGrid(gameState.grid);}
+            return A3(Graphics.Collage.collage,
+              Basics.round(4 * tileSize + 5 * tileMargin),
+              Basics.round(4 * tileSize + 5 * tileMargin),
+              _L.fromArray([Graphics.Collage.toForm(displayGrid(gameState.grid))
+                           ,Graphics.Collage.toForm(Text.asText(_L.append(String.show(gameState.nextTile),
+                           _L.append(", ",
+                           String.show(gameState.tilePush)))))]));}
          _E.Case($moduleName,
-         "on line 77, column 27 to 53");
+         "between lines 77 and 81");
       }();
    });
    _elm.Rendering.values = {_op: _op
@@ -295,18 +293,36 @@ Elm.Logic.make = function (_elm) {
    Native.Json = Elm.Native.Json.make(_elm);
    var Native = Native || {};
    Native.Ports = Elm.Native.Ports.make(_elm);
+   var Random = Elm.Random.make(_elm);
    var Signal = Elm.Signal.make(_elm);
    var String = Elm.String.make(_elm);
    var Text = Elm.Text.make(_elm);
    var Time = Elm.Time.make(_elm);
    var _op = {};
+   var tile2Probability = 0.9;
+   var newTile = function (x) {
+      return _U.cmp(x,
+      tile2Probability) < 0 ? GameModel.Number(2) : GameModel.Number(4);
+   };
    var stepGame = F2(function (input,
    gameState) {
-      return _U.replace([["tilePush"
-                         ,input.userInput.tilePushDirection]],
+      return _U.eq(input.userInput.tilePushDirection,
+      gameState.tilePush) ? gameState : _U.replace([["tilePush"
+                                                    ,input.userInput.tilePushDirection]
+                                                   ,["nextTile"
+                                                    ,newTile(List.head(input.randomFloats))]
+                                                   ,["grid"
+                                                    ,A3(GameModel.setTile,
+                                                    {ctor: "_Tuple2"
+                                                    ,_0: 0
+                                                    ,_1: 0},
+                                                    gameState.grid,
+                                                    gameState.nextTile)]],
       gameState);
    });
    _elm.Logic.values = {_op: _op
+                       ,tile2Probability: tile2Probability
+                       ,newTile: newTile
                        ,stepGame: stepGame};
    return _elm.Logic.values;
 };Elm.GameModel = Elm.GameModel || {};
@@ -338,26 +354,78 @@ Elm.GameModel.make = function (_elm) {
    var Text = Elm.Text.make(_elm);
    var Time = Elm.Time.make(_elm);
    var _op = {};
-   var GameState = F2(function (a,
-   b) {
+   var GameState = F3(function (a,
+   b,
+   c) {
       return {_: {}
              ,grid: a
+             ,nextTile: c
              ,tilePush: b};
    });
    var Grid = function (a) {
       return {ctor: "Grid",_0: a};
    };
+   var readTile = F2(function (_v0,
+   _v1) {
+      return function () {
+         switch (_v1.ctor)
+         {case "Grid":
+            return function () {
+                 switch (_v0.ctor)
+                 {case "_Tuple2":
+                    return List.head(List.drop(_v0._0)(List.head(List.drop(_v0._1)(_v1._0))));}
+                 _E.Case($moduleName,
+                 "on line 31, column 28 to 65");
+              }();}
+         _E.Case($moduleName,
+         "on line 31, column 28 to 65");
+      }();
+   });
+   var setTile = F3(function (_v7,
+   _v8,
+   t) {
+      return function () {
+         switch (_v8.ctor)
+         {case "Grid":
+            return function () {
+                 switch (_v7.ctor)
+                 {case "_Tuple2":
+                    return function () {
+                         var r = List.head(List.drop(_v7._1)(_v8._0));
+                         var nr = _L.append(A2(List.take,
+                         _v7._0,
+                         r),
+                         _L.append(_L.fromArray([t]),
+                         A2(List.drop,_v7._0 + 1,r)));
+                         return Grid(_L.append(A2(List.take,
+                         _v7._1,
+                         _v8._0),
+                         _L.append(_L.fromArray([nr]),
+                         A2(List.drop,
+                         _v7._1 + 1,
+                         _v8._0))));
+                      }();}
+                 _E.Case($moduleName,
+                 "between lines 34 and 37");
+              }();}
+         _E.Case($moduleName,
+         "between lines 34 and 37");
+      }();
+   });
    var Empty = {ctor: "Empty"};
-   var defaultGrid = Grid(List.repeat(4)(List.repeat(4)(Empty)));
+   var emptyGrid = Grid(List.repeat(4)(List.repeat(4)(Empty)));
    var defaultGame = {_: {}
-                     ,grid: defaultGrid
-                     ,tilePush: Maybe.Nothing};
+                     ,grid: emptyGrid
+                     ,nextTile: Empty
+                     ,tilePush: InputModel.Up};
    var Number = function (a) {
       return {ctor: "Number"
              ,_0: a};
    };
    _elm.GameModel.values = {_op: _op
-                           ,defaultGrid: defaultGrid
+                           ,emptyGrid: emptyGrid
+                           ,readTile: readTile
+                           ,setTile: setTile
                            ,defaultGame: defaultGame
                            ,Number: Number
                            ,Empty: Empty
@@ -388,16 +456,24 @@ Elm.InputModel.make = function (_elm) {
    Native.Json = Elm.Native.Json.make(_elm);
    var Native = Native || {};
    Native.Ports = Elm.Native.Ports.make(_elm);
+   var Random = Elm.Random.make(_elm);
    var Signal = Elm.Signal.make(_elm);
    var String = Elm.String.make(_elm);
    var Text = Elm.Text.make(_elm);
    var Time = Elm.Time.make(_elm);
    var _op = {};
-   var Input = F2(function (a,b) {
+   var delta = Time.fps(15);
+   var Input = F3(function (a,
+   b,
+   c) {
       return {_: {}
+             ,randomFloats: c
              ,timeDelta: a
              ,userInput: b};
    });
+   var randomFloats = function (s) {
+      return Random.floatList(Signal.sampleOn(s)(Signal.constant(2)));
+   };
    var UserInput = function (a) {
       return {_: {}
              ,tilePushDirection: a};
@@ -444,12 +520,30 @@ Elm.InputModel.make = function (_elm) {
    var userInput = A2(Signal._op["<~"],
    function (d) {
       return {_: {}
-             ,tilePushDirection: d};
+             ,tilePushDirection: A3(Maybe.maybe,
+             Up,
+             Basics.id,
+             d)};
    },
-   arrowsDirection);
+   A2(Signal.dropIf,
+   function (d) {
+      return _U.eq(d,
+      Maybe.Nothing);
+   },
+   Maybe.Nothing)(Signal.dropRepeats(arrowsDirection)));
+   var input = Signal.sampleOn(delta)(A2(Signal._op["~"],
+   A2(Signal._op["~"],
+   A2(Signal._op["<~"],
+   Input,
+   delta),
+   userInput),
+   randomFloats(delta)));
    _elm.InputModel.values = {_op: _op
                             ,arrowsDirection: arrowsDirection
                             ,userInput: userInput
+                            ,randomFloats: randomFloats
+                            ,delta: delta
+                            ,input: input
                             ,Up: Up
                             ,Down: Down
                             ,Left: Left

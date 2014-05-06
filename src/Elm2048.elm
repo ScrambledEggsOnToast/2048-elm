@@ -2,17 +2,12 @@ module Elm2048 where
 
 import Window
 
-import InputModel (..)
+import InputModel (input)
+import GameModel (defaultGame)
+import Logic (stepGame)
+import Rendering (display)
 
-import GameModel (..)
-
-import Logic (..)
-
-import Rendering (..)
-
-delta = fps 30
-input = sampleOn delta (lift2 Input delta userInput)
 
 gameState = foldp stepGame defaultGame input
 
-main = lift2 display Window.dimensions gameState
+main = display <~ Window.dimensions ~ gameState

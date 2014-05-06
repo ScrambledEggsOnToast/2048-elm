@@ -1,6 +1,7 @@
 module InputModel where
 
 import Keyboard
+import Random
 
 {------------------------------------------------------------------------------
 
@@ -10,7 +11,7 @@ Input Model
 
 data Direction = Up | Down | Left | Right 
 
-type UserInput = { tilePushDirection:Maybe Direction }
+type UserInput = { tilePushDirection: Direction }
 
 arrowsDirection : Signal (Maybe Direction)
 arrowsDirection = let toDirection ds wasds = 
@@ -26,6 +27,12 @@ arrowsDirection = let toDirection ds wasds =
     in toDirection <~ Keyboard.arrows ~ Keyboard.wasd
 
 userInput : Signal UserInput
-userInput = (\d -> {tilePushDirection = d}) <~ arrowsDirection
+userInput = (\d -> {tilePushDirection = maybe Up id d}) <~ (dropIf (\d -> d==Nothing) Nothing <| dropRepeats arrowsDirection)
 
-type Input = { timeDelta:Float, userInput:UserInput }
+randomFloats : Signal a -> Signal [Float]
+randomFloats s = Random.floatList <| sampleOn s <| constant 2
+
+type Input = { timeDelta:Float, userInput:UserInput, randomFloats:[Float]}
+
+delta = fps 15
+input = sampleOn delta <| Input <~ delta ~ userInput ~ (randomFloats delta)
