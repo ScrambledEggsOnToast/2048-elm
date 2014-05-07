@@ -48,10 +48,16 @@ h1 {
     cursor: pointer; 
 }
 
-#score {
-    size: 90px
+p#description {
+    clear: left;
 }
 
+#gameBoard {
+    width: 500px; 
+    height: 500px; 
+    margin-top: 30px; 
+    clear: both;
+}
         </style>
     </head>
     <body onMouseUp="sendNewGame(false)">
@@ -61,8 +67,8 @@ h1 {
                 <div id="scoreContainer"><strong>SCORE<div id="score">0</div></strong></div>
                 <div onMouseDown="sendNewGame(true)" id="newGameButton"><strong>New Game</strong></div>
             </div>
-            <p style="clear: left;">Join the numbers and get to the <strong>2048 tile!</strong></p>
-            <div id="gameBoard" style="width:500px; height:500px; margin-top: 30px; clear: both;"></div>
+            <p id="description">Join the numbers and get to the <strong>2048 tile!</strong></p>
+            <div id="gameBoard"></div>
         </div>
     </body>
     <script type="text/javascript">
@@ -72,9 +78,10 @@ h1 {
           }
         }, false);
 
-        var gameBoardDiv = document.getElementById('gameBoard');
-        var elm2048 = Elm.embed(Elm.Elm2048, gameBoardDiv, { newGameButton: false });
+        var gameBoardDiv = document.getElementById('gameBoard'); // 
+        var elm2048 = Elm.embed(Elm.Elm2048, gameBoardDiv, { newGameButton: false }); // Set up our elm component in the game board div
 
+        
         elm2048.ports.score.subscribe(function (x) { 
             document.getElementById('score').innerHTML=x;
         });

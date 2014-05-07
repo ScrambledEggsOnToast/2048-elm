@@ -48,6 +48,10 @@ h1 {
     cursor: pointer; 
 }
 
+p#description {
+    clear: left;
+}
+
 #gameBoard {
     width: 500px; 
     height: 500px; 
@@ -63,8 +67,8 @@ h1 {
                 <div id="scoreContainer"><strong>SCORE<div id="score">0</div></strong></div>
                 <div onMouseDown="sendNewGame(true)" id="newGameButton"><strong>New Game</strong></div>
             </div>
-            <p style="clear: left;">Join the numbers and get to the <strong>2048 tile!</strong></p>
-            <div id="gameBoard" style=""></div>
+            <p id="description">Join the numbers and get to the <strong>2048 tile!</strong></p>
+            <div id="gameBoard"></div>
         </div>
     </body>
     <script type="text/javascript">
@@ -74,14 +78,15 @@ h1 {
           }
         }, false);
 
-        var gameBoardDiv = document.getElementById('gameBoard');
-        var elm2048 = Elm.embed(Elm.Elm2048, gameBoardDiv, { newGameButton: false });
+        var gameBoardDiv = document.getElementById('gameBoard'); // The placeholder div that will accept our elm component
+        var elm2048 = Elm.embed(Elm.Elm2048, gameBoardDiv, { newGameButton: false }); // Set up our elm component in the game board div 
+                                                                                      // The new game button is not pressed by default
 
-        elm2048.ports.score.subscribe(function (x) { 
-            document.getElementById('score').innerHTML=x;
+        elm2048.ports.score.subscribe(function (x) { // Every time the score port in the elm component changes:
+            document.getElementById('score').innerHTML=x; // modify the score displayed in the score box
         });
 
-        function sendNewGame(a) {
+        function sendNewGame(a) { // A function to send the boolean status of the new game button to the elm component via its newGameButton port.
             elm2048.ports.newGameButton.send(a);
         }
 
