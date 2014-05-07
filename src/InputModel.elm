@@ -21,18 +21,20 @@ module InputModel where
 import Keyboard
 import Random
 
-type Input = { 
-    timeDelta: Float
-  , userInput: UserInput
-  , randomFloats: [Float]
-  , newGameButtonPressed: Bool
+type Input = { -- define the inputs that the game will depend upon:
+    controls: Controls          -- the user controls
+  , randomFloats: [Float]       -- a source of randomness
+  , newGameButtonPressed: Bool  -- whether the new game button is pressed
   }
 
-data Direction = Up | Down | Left | Right | None
+data Direction = Up | Down | Left | Right | None -- the direction to shift 
+                                                 -- the grid
 
-type UserInput = { tilePushDirection: Direction }
+type Controls = { tilePushDirection: Direction } -- define the user controls
 
-arrowsDirection : Signal Direction
+arrowsDirection : Signal Direction -- make a signal that is the direction 
+                                   -- that the user has chosen. compatible
+                                   -- with both the wasd and arrow keys
 arrowsDirection = let toDirection ds wasds = 
                       if | ds == {x=0,y=1} -> Up
                          | ds == {x=0,y=-1} -> Down
@@ -45,10 +47,12 @@ arrowsDirection = let toDirection ds wasds =
                          | otherwise -> None
     in toDirection <~ Keyboard.arrows ~ Keyboard.wasd
 
-delta = fps 30
 
-userInput : Signal UserInput
-userInput = UserInput <~ (dropRepeats arrowsDirection)
+controls : Signal Controls -- construct a signal of the user controls
+controls = Controls <~ arrowsDirection
 
-randomFloats : Signal a -> Signal [Float]
-randomFloats s = Random.floatList <| sampleOn delta <| constant 2
+randomFloats : Signal a -> Signal [Float] -- provide two random floats that 
+                                          -- will be used for random events in 
+                                          -- the game logic. changes every time
+                                          -- the signal s changes
+randomFloats s = Random.floatList <| sampleOn s <| constant 2

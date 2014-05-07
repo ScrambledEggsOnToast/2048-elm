@@ -31,18 +31,17 @@ Elm.Elm2048.make = function (_elm) {
    var Time = Elm.Time.make(_elm);
    var Window = Elm.Window.make(_elm);
    var _op = {};
+   var delta = Time.fps(30);
    var newGameButton = Native.Ports.portIn("newGameButton",
    Native.Ports.incomingSignal(function (v) {
       return typeof v === "boolean" ? v : _E.raise("invalid input, expecting JSBoolean but got " + v);
    }));
-   var input = Signal.sampleOn(InputModel.delta)(A2(Signal._op["~"],
-   A2(Signal._op["~"],
+   var input = Signal.sampleOn(delta)(A2(Signal._op["~"],
    A2(Signal._op["~"],
    A2(Signal._op["<~"],
    InputModel.Input,
-   InputModel.delta),
-   InputModel.userInput),
-   InputModel.randomFloats(InputModel.delta)),
+   InputModel.controls),
+   InputModel.randomFloats(delta)),
    newGameButton));
    var gameState = A3(Signal.foldp,
    Logic.stepGame,
@@ -63,6 +62,7 @@ Elm.Elm2048.make = function (_elm) {
    },
    gameState));
    _elm.Elm2048.values = {_op: _op
+                         ,delta: delta
                          ,input: input
                          ,gameState: gameState
                          ,main: main};
@@ -131,8 +131,7 @@ Elm.Rendering.make = function (_elm) {
              ,height: Maybe.Just(tileTextSize(tile))
              ,italic: false
              ,line: Maybe.Nothing
-             ,typeface: _L.fromArray(["Clear Sans"
-                                     ,"Helvetica Neue"
+             ,typeface: _L.fromArray(["Helvetica Neue"
                                      ,"Arial"
                                      ,"sans-serif"])};
    };
@@ -195,70 +194,76 @@ Elm.Rendering.make = function (_elm) {
    var tileMargin = 15;
    var tileSize = 106.25;
    var gridWidth = 4 * tileSize + 5 * tileMargin;
-   var displayGameOverOverlay = A3(Graphics.Collage.collage,
-   Basics.round(gridWidth),
-   Basics.round(gridWidth),
-   _L.fromArray([Graphics.Collage.filled(A4(Color.rgba,
-                238,
-                228,
-                218,
-                0.73))(Graphics.Collage.square(gridWidth))
-                ,Graphics.Collage.toForm(Text.centered(Text.style(tileTextStyle(GameModel.Number(2)))(Text.toText("Game over!"))))]));
-   var displayWonOverlay = A3(Graphics.Collage.collage,
-   Basics.round(gridWidth),
-   Basics.round(gridWidth),
-   _L.fromArray([Graphics.Collage.filled(A4(Color.rgba,
-                237,
-                194,
-                46,
-                0.5))(Graphics.Collage.square(gridWidth))
-                ,Graphics.Collage.toForm(Text.centered(Text.style(tileTextStyle(GameModel.Number(16)))(Text.toText("You win!"))))]));
+   var displayOverlay = F3(function (s,
+   c,
+   t) {
+      return A3(Graphics.Collage.collage,
+      Basics.round(gridWidth),
+      Basics.round(gridWidth),
+      _L.fromArray([Graphics.Collage.filled(c)(Graphics.Collage.square(gridWidth))
+                   ,Graphics.Collage.toForm(Text.centered(Text.style(s)(Text.toText(t))))]));
+   });
+   var displayGameOverOverlay = A3(displayOverlay,
+   tileTextStyle(GameModel.Number(2)),
+   A4(Color.rgba,238,228,218,0.73),
+   "Game over!");
+   var displayWonOverlay = A3(displayOverlay,
+   tileTextStyle(GameModel.Number(16)),
+   A4(Color.rgba,237,194,46,0.5),
+   "You win!");
    var displayTile = function (tile) {
       return function () {
-         switch (tile.ctor)
-         {case "Empty":
-            return A3(Graphics.Collage.collage,
-              Basics.round(tileSize),
-              Basics.round(tileSize),
-              _L.fromArray([Graphics.Collage.filled(tileColor(GameModel.Empty))(Graphics.Collage.square(tileSize))]));
-            case "Number":
-            return A3(Graphics.Collage.collage,
-              Basics.round(tileSize),
-              Basics.round(tileSize),
-              _L.fromArray([Graphics.Collage.filled(tileColor(tile))(Graphics.Collage.square(tileSize))
-                           ,Graphics.Collage.toForm(Text.centered(Text.style(tileTextStyle(tile))(Text.toText(String.show(tile._0)))))]));}
-         _E.Case($moduleName,
-         "between lines 72 and 79");
+         var tileBackground = Graphics.Collage.filled(tileColor(tile))(Graphics.Collage.square(tileSize));
+         return function () {
+            switch (tile.ctor)
+            {case "Empty":
+               return A3(Graphics.Collage.collage,
+                 Basics.round(tileSize),
+                 Basics.round(tileSize),
+                 _L.fromArray([tileBackground]));
+               case "Number":
+               return A3(Graphics.Collage.collage,
+                 Basics.round(tileSize),
+                 Basics.round(tileSize),
+                 _L.fromArray([tileBackground
+                              ,Graphics.Collage.toForm(Text.centered(Text.style(tileTextStyle(tile))(Text.toText(String.show(tile._0)))))]));}
+            _E.Case($moduleName,
+            "between lines 75 and 84");
+         }();
       }();
    };
-   var displayGrid = function (_v8) {
+   var displayTileAtCoordinates = function (_v8) {
       return function () {
          switch (_v8.ctor)
+         {case "_Tuple3":
+            return function () {
+                 var position = {ctor: "_Tuple2"
+                                ,_0: (tileSize + tileMargin) * (Basics.toFloat(_v8._1) - 1.5)
+                                ,_1: (tileSize + tileMargin) * (Basics.toFloat(_v8._2) - 1.5)};
+                 return Graphics.Collage.move(position)(Graphics.Collage.toForm(displayTile(_v8._0)));
+              }();}
+         _E.Case($moduleName,
+         "between lines 87 and 92");
+      }();
+   };
+   var displayGrid = function (_v13) {
+      return function () {
+         switch (_v13.ctor)
          {case "Grid":
             return function () {
-                 var tiles = List.map(function (_v15) {
-                    return function () {
-                       switch (_v15.ctor)
-                       {case "_Tuple3":
-                          return Graphics.Collage.move({ctor: "_Tuple2"
-                                                       ,_0: (tileSize + tileMargin) * (_v15._1 - 1.5)
-                                                       ,_1: (tileSize + tileMargin) * (_v15._2 - 1.5)})(Graphics.Collage.toForm(displayTile(_v15._0)));}
-                       _E.Case($moduleName,
-                       "on line 84, column 46 to 143");
-                    }();
-                 })(List.concat(A2(List.zipWith,
+                 var tiles = List.map(displayTileAtCoordinates)(List.concat(A2(List.zipWith,
                  F2(function (j,r) {
                     return A2(List.map,
-                    function (_v11) {
+                    function (_v16) {
                        return function () {
-                          switch (_v11.ctor)
+                          switch (_v16.ctor)
                           {case "_Tuple2":
                              return {ctor: "_Tuple3"
-                                    ,_0: _v11._0
-                                    ,_1: _v11._1
+                                    ,_0: _v16._0
+                                    ,_1: _v16._1
                                     ,_2: j};}
                           _E.Case($moduleName,
-                          "on line 86, column 61 to 66");
+                          "on line 101, column 61 to 66");
                        }();
                     },
                     r);
@@ -268,7 +273,7 @@ Elm.Rendering.make = function (_elm) {
                     return A2(List.zip,
                     r,
                     _L.range(0,3));
-                 })(_v8._0))));
+                 })(_v13._0))));
                  var gridBox = Graphics.Collage.filled(A3(Color.rgb,
                  187,
                  173,
@@ -280,7 +285,7 @@ Elm.Rendering.make = function (_elm) {
                  tiles));
               }();}
          _E.Case($moduleName,
-         "between lines 82 and 89");
+         "between lines 95 and 107");
       }();
    };
    var display = F2(function (_v20,
@@ -300,7 +305,7 @@ Elm.Rendering.make = function (_elm) {
               _L.fromArray([Graphics.Collage.toForm(displayGrid(gameState.grid))
                            ,Graphics.Collage.toForm(displayWonOverlay)])) : displayGrid(gameState.grid);}
          _E.Case($moduleName,
-         "between lines 106 and 108");
+         "between lines 132 and 144");
       }();
    });
    _elm.Rendering.values = {_op: _op
@@ -312,7 +317,9 @@ Elm.Rendering.make = function (_elm) {
                            ,tileTextSize: tileTextSize
                            ,tileTextStyle: tileTextStyle
                            ,displayTile: displayTile
+                           ,displayTileAtCoordinates: displayTileAtCoordinates
                            ,displayGrid: displayGrid
+                           ,displayOverlay: displayOverlay
                            ,displayGameOverOverlay: displayGameOverOverlay
                            ,displayWonOverlay: displayWonOverlay
                            ,display: display};
@@ -358,7 +365,7 @@ Elm.Logic.make = function (_elm) {
                  GameModel.Number(2048));
               })(List.concat(_v0._0))));}
          _E.Case($moduleName,
-         "on line 148, column 20 to 79");
+         "on line 181, column 20 to 79");
       }();
    };
    var noTilePushDirection = function (gameState) {
@@ -371,24 +378,131 @@ Elm.Logic.make = function (_elm) {
                          ,GameModel.Won]],
       gameState);
    };
-   var gameOver = function (gameState) {
+   var lose = function (gameState) {
       return _U.replace([["gameProgress"
                          ,GameModel.GameOver]],
       gameState);
    };
-   var inProgressGameState = function (gameState) {
-      return _U.replace([["gameProgress"
-                         ,GameModel.InProgress]],
-      gameState);
+   var emptyTiles = function (_v3) {
+      return function () {
+         switch (_v3.ctor)
+         {case "Grid":
+            return List.map(function (_v15) {
+                 return function () {
+                    switch (_v15.ctor)
+                    {case "_Tuple3":
+                       return {ctor: "_Tuple2"
+                              ,_0: _v15._1
+                              ,_1: _v15._2};}
+                    _E.Case($moduleName,
+                    "on line 123, column 41 to 44");
+                 }();
+              })(List.filter(function (_v10) {
+                 return function () {
+                    switch (_v10.ctor)
+                    {case "_Tuple3":
+                       return _U.eq(_v10._0,
+                         GameModel.Empty);}
+                    _E.Case($moduleName,
+                    "on line 124, column 43 to 53");
+                 }();
+              })(List.concat(A2(List.zipWith,
+              F2(function (j,r) {
+                 return A2(List.map,
+                 function (_v6) {
+                    return function () {
+                       switch (_v6.ctor)
+                       {case "_Tuple2":
+                          return {ctor: "_Tuple3"
+                                 ,_0: _v6._0
+                                 ,_1: _v6._1
+                                 ,_2: j};}
+                       _E.Case($moduleName,
+                       "on line 126, column 56 to 61");
+                    }();
+                 },
+                 r);
+              }),
+              _L.range(0,
+              3))(List.map(function (r) {
+                 return A2(List.zip,
+                 r,
+                 _L.range(0,3));
+              })(_v3._0)))));}
+         _E.Case($moduleName,
+         "between lines 123 and 128");
+      }();
    };
+   var newTileIndex = F2(function (x,
+   g) {
+      return function () {
+         var emptyTileIndices = emptyTiles(g);
+         return function () {
+            switch (emptyTileIndices.ctor)
+            {case "[]":
+               return Maybe.Nothing;}
+            return Maybe.Just(List.head(function (y) {
+               return A2(List.drop,
+               y,
+               emptyTileIndices);
+            }(Basics.floor(Basics.toFloat(List.length(emptyTileIndices)) * x))));
+         }();
+      }();
+   });
    var tile2Probability = 0.9;
    var newTile = function (x) {
       return _U.cmp(x,
       tile2Probability) < 0 ? GameModel.Number(2) : GameModel.Number(4);
    };
+   var placeRandomTile = F2(function (input,
+   gameState) {
+      return _U.replace([["grid"
+                         ,A2(GameModel.setTile,
+                         A2(Maybe.maybe,
+                         {ctor: "_Tuple2",_0: 0,_1: 0},
+                         Basics.id)(A2(newTileIndex,
+                         List.last(input.randomFloats),
+                         gameState.grid)),
+                         gameState.grid)(newTile(List.head(input.randomFloats)))]
+                        ,["tilesToPlace"
+                         ,gameState.tilesToPlace - 1]],
+      gameState);
+   });
+   var groupedByTwo = function (l) {
+      return groupedByTwo$(A2(List.filter,
+      function (x) {
+         return !_U.eq(x,0);
+      },
+      l));
+   };
+   var groupedByTwo$ = function (l) {
+      return function () {
+         switch (l.ctor)
+         {case "::": switch (l._1.ctor)
+              {case "::":
+                 switch (l._1._1.ctor)
+                   {case "[]": return _U.eq(l._0,
+                        l._1._0) ? _L.fromArray([_L.fromArray([l._0
+                                                              ,l._1._0])]) : _L.fromArray([_L.fromArray([l._0])
+                                                                                          ,_L.fromArray([l._1._0])]);}
+                   return _U.eq(l._0,
+                   l._1._0) ? {ctor: "::"
+                              ,_0: _L.fromArray([l._0
+                                                ,l._1._0])
+                              ,_1: groupedByTwo(l._1._1)} : {ctor: "::"
+                                                            ,_0: _L.fromArray([l._0])
+                                                            ,_1: groupedByTwo({ctor: "::"
+                                                                              ,_0: l._1._0
+                                                                              ,_1: l._1._1})};
+                 case "[]":
+                 return _L.fromArray([_L.fromArray([l._0])]);}
+              break;}
+         return _L.fromArray([]);
+      }();
+   };
    var slideRow = function (r) {
       return function () {
-         var groupedInts = Utils.groupedByTwo(A2(List.map,
+         var groupedInts = groupedByTwo(A2(List.map,
          GameModel.tileToInt,
          r));
          return {ctor: "_Tuple2"
@@ -405,9 +519,9 @@ Elm.Logic.make = function (_elm) {
       }();
    };
    var slideGrid = F2(function (dir,
-   _v3) {
+   _v26) {
       return function () {
-         switch (_v3.ctor)
+         switch (_v26.ctor)
          {case "Grid":
             return function () {
                  var h = function () {
@@ -419,43 +533,43 @@ Elm.Logic.make = function (_elm) {
                             Basics.fst,
                             x)),
                             A2(List.map,Basics.snd,x));
-                         }(List.map(slideRow)(Utils.transpose(_v3._0)));
+                         }(List.map(slideRow)(Utils.transpose(_v26._0)));
                        case "Left": return A2(List.map,
                          slideRow,
-                         _v3._0);
+                         _v26._0);
                        case "Right":
-                       return List.map(function (_v7) {
+                       return List.map(function (_v30) {
                             return function () {
-                               switch (_v7.ctor)
+                               switch (_v30.ctor)
                                {case "_Tuple2":
                                   return {ctor: "_Tuple2"
-                                         ,_0: List.reverse(_v7._0)
-                                         ,_1: _v7._1};}
+                                         ,_0: List.reverse(_v30._0)
+                                         ,_1: _v30._1};}
                                _E.Case($moduleName,
-                               "on line 74, column 54 to 65");
+                               "on line 82, column 46 to 57");
                             }();
                          })(List.map(slideRow)(A2(List.map,
                          List.reverse,
-                         _v3._0)));
+                         _v26._0)));
                        case "Up": return function (x) {
                             return A2(List.zip,
                             Utils.transpose(A2(List.map,
                             Basics.fst,
                             x)),
                             A2(List.map,Basics.snd,x));
-                         }(List.map(function (_v11) {
+                         }(List.map(function (_v34) {
                             return function () {
-                               switch (_v11.ctor)
+                               switch (_v34.ctor)
                                {case "_Tuple2":
                                   return {ctor: "_Tuple2"
-                                         ,_0: List.reverse(_v11._0)
-                                         ,_1: _v11._1};}
+                                         ,_0: List.reverse(_v34._0)
+                                         ,_1: _v34._1};}
                                _E.Case($moduleName,
-                               "on line 81, column 56 to 67");
+                               "on line 89, column 48 to 59");
                             }();
-                         })(List.map(slideRow)(List.map(List.reverse)(Utils.transpose(_v3._0)))));}
+                         })(List.map(slideRow)(List.map(List.reverse)(Utils.transpose(_v26._0)))));}
                     return A2(List.zip,
-                    _v3._0,
+                    _v26._0,
                     _L.fromArray([0,0,0,0]));
                  }();
                  return {ctor: "_Tuple2"
@@ -467,10 +581,10 @@ Elm.Logic.make = function (_elm) {
                         h))};
               }();}
          _E.Case($moduleName,
-         "between lines 72 and 86");
+         "between lines 80 and 94");
       }();
    });
-   var gridFull = function (g) {
+   var gameLost = function (g) {
       return function () {
          var right = Basics.fst(A2(slideGrid,
          InputModel.Right,
@@ -484,21 +598,23 @@ Elm.Logic.make = function (_elm) {
          var up = Basics.fst(A2(slideGrid,
          InputModel.Up,
          g));
-         return List.and(_L.fromArray([_U.eq(up,
-                                      down)
+         return List.and(_L.fromArray([!_U.eq(g,
+                                      GameModel.emptyGrid)
+                                      ,_U.eq(up,down)
                                       ,_U.eq(down,left)
-                                      ,_U.eq(left,right)]));
+                                      ,_U.eq(left,right)
+                                      ,_U.eq(right,g)]));
       }();
    };
    var pushTiles = F2(function (input,
    gameState) {
       return function () {
          var newGridScore = A2(slideGrid,
-         input.userInput.tilePushDirection,
+         input.controls.tilePushDirection,
          gameState.grid);
          return _U.eq(Basics.fst(newGridScore),
          gameState.grid) ? gameState : _U.replace([["tilePush"
-                                                   ,input.userInput.tilePushDirection]
+                                                   ,input.controls.tilePushDirection]
                                                   ,["tilesToPlace"
                                                    ,gameState.tilesToPlace + 1]
                                                   ,["grid"
@@ -508,117 +624,34 @@ Elm.Logic.make = function (_elm) {
          gameState);
       }();
    });
-   var emptyTiles = function (_v15) {
-      return function () {
-         switch (_v15.ctor)
-         {case "Grid":
-            return List.map(function (_v27) {
-                 return function () {
-                    switch (_v27.ctor)
-                    {case "_Tuple3":
-                       return {ctor: "_Tuple2"
-                              ,_0: _v27._1
-                              ,_1: _v27._2};}
-                    _E.Case($moduleName,
-                    "on line 53, column 41 to 44");
-                 }();
-              })(List.filter(function (_v22) {
-                 return function () {
-                    switch (_v22.ctor)
-                    {case "_Tuple3":
-                       return _U.eq(_v22._0,
-                         GameModel.Empty);}
-                    _E.Case($moduleName,
-                    "on line 54, column 43 to 53");
-                 }();
-              })(List.concat(A2(List.zipWith,
-              F2(function (j,r) {
-                 return A2(List.map,
-                 function (_v18) {
-                    return function () {
-                       switch (_v18.ctor)
-                       {case "_Tuple2":
-                          return {ctor: "_Tuple3"
-                                 ,_0: _v18._0
-                                 ,_1: _v18._1
-                                 ,_2: j};}
-                       _E.Case($moduleName,
-                       "on line 56, column 56 to 61");
-                    }();
-                 },
-                 r);
-              }),
-              _L.range(0,
-              3))(List.map(function (r) {
-                 return A2(List.zip,
-                 r,
-                 _L.range(0,3));
-              })(_v15._0)))));}
-         _E.Case($moduleName,
-         "between lines 53 and 58");
-      }();
-   };
-   var newTileIndex = F2(function (x,
-   g) {
-      return function () {
-         var emptyTileIndices = emptyTiles(g);
-         return function () {
-            switch (emptyTileIndices.ctor)
-            {case "[]":
-               return Maybe.Nothing;}
-            return Maybe.Just(List.head(A2(List.drop,
-            Basics.floor(Basics.toFloat(List.length(emptyTileIndices)) * x),
-            emptyTileIndices)));
-         }();
-      }();
-   });
-   var placeRandomTile = F2(function (input,
-   gameState) {
-      return _U.replace([["nextTile"
-                         ,newTile(List.head(input.randomFloats))]
-                        ,["grid"
-                         ,A3(GameModel.setTile,
-                         A2(Maybe.maybe,
-                         {ctor: "_Tuple2",_0: 0,_1: 0},
-                         Basics.id)(A2(newTileIndex,
-                         List.last(input.randomFloats),
-                         gameState.grid)),
-                         gameState.grid,
-                         gameState.nextTile)]
-                        ,["tilesToPlace"
-                         ,gameState.tilesToPlace - 1]],
-      gameState);
-   });
    var stepGame = F2(function (input,
    gameState) {
       return input.newGameButtonPressed ? GameModel.defaultGame : _U.eq(gameState.gameProgress,
       GameModel.GameOver) ? gameState : _U.eq(gameState.gameProgress,
-      GameModel.Won) ? gameState : gameWon(gameState.grid) ? win(gameState) : List.and(_L.fromArray([gridFull(gameState.grid)
-                                                                                                    ,_U.eq(gameState.gameProgress,
-                                                                                                    GameModel.InProgress)])) ? gameOver(gameState) : _U.cmp(gameState.tilesToPlace,
+      GameModel.Won) ? gameState : gameWon(gameState.grid) ? win(gameState) : gameLost(gameState.grid) ? lose(gameState) : _U.cmp(gameState.tilesToPlace,
       0) > 0 ? A2(placeRandomTile,
       input,
-      gameState) : _U.eq(gameState.gameProgress,
-      GameModel.Beginning) ? inProgressGameState(gameState) : _U.eq(input.userInput.tilePushDirection,
-      gameState.tilePush) ? gameState : _U.eq(input.userInput.tilePushDirection,
-      InputModel.None) ? noTilePushDirection(gameState) : !_U.eq(input.userInput.tilePushDirection,
+      gameState) : _U.eq(input.controls.tilePushDirection,
+      gameState.tilePush) ? gameState : _U.eq(input.controls.tilePushDirection,
+      InputModel.None) ? noTilePushDirection(gameState) : !_U.eq(input.controls.tilePushDirection,
       InputModel.None) ? A2(pushTiles,
       input,
       gameState) : gameState;
    });
    _elm.Logic.values = {_op: _op
-                       ,emptyTiles: emptyTiles
+                       ,groupedByTwo: groupedByTwo
+                       ,groupedByTwo$: groupedByTwo$
                        ,slideRow: slideRow
                        ,slideGrid: slideGrid
-                       ,gridFull: gridFull
+                       ,gameLost: gameLost
                        ,tile2Probability: tile2Probability
                        ,newTile: newTile
+                       ,emptyTiles: emptyTiles
                        ,newTileIndex: newTileIndex
-                       ,inProgressGameState: inProgressGameState
-                       ,gameOver: gameOver
+                       ,lose: lose
                        ,win: win
-                       ,placeRandomTile: placeRandomTile
                        ,noTilePushDirection: noTilePushDirection
+                       ,placeRandomTile: placeRandomTile
                        ,pushTiles: pushTiles
                        ,gameWon: gameWon
                        ,stepGame: stepGame};
@@ -652,24 +685,21 @@ Elm.GameModel.make = function (_elm) {
    var Text = Elm.Text.make(_elm);
    var Time = Elm.Time.make(_elm);
    var _op = {};
-   var GameState = F6(function (a,
+   var GameState = F5(function (a,
    b,
    c,
    d,
-   e,
-   f) {
+   e) {
       return {_: {}
-             ,gameProgress: f
+             ,gameProgress: e
              ,grid: a
-             ,nextTile: c
-             ,score: e
+             ,score: d
              ,tilePush: b
-             ,tilesToPlace: d};
+             ,tilesToPlace: c};
    });
    var Won = {ctor: "Won"};
    var GameOver = {ctor: "GameOver"};
    var InProgress = {ctor: "InProgress"};
-   var Beginning = {ctor: "Beginning"};
    var Grid = function (a) {
       return {ctor: "Grid",_0: a};
    };
@@ -683,10 +713,10 @@ Elm.GameModel.make = function (_elm) {
                  {case "_Tuple2":
                     return List.head(List.drop(_v0._0)(List.head(List.drop(_v0._1)(_v1._0))));}
                  _E.Case($moduleName,
-                 "between lines 58 and 60");
+                 "between lines 49 and 51");
               }();}
          _E.Case($moduleName,
-         "between lines 58 and 60");
+         "between lines 49 and 51");
       }();
    });
    var setTile = F3(function (_v7,
@@ -714,21 +744,20 @@ Elm.GameModel.make = function (_elm) {
                          _v8._0))));
                       }();}
                  _E.Case($moduleName,
-                 "between lines 63 and 66");
+                 "between lines 55 and 59");
               }();}
          _E.Case($moduleName,
-         "between lines 63 and 66");
+         "between lines 55 and 59");
       }();
    });
    var Empty = {ctor: "Empty"};
    var emptyGrid = Grid(List.repeat(4)(List.repeat(4)(Empty)));
    var defaultGame = {_: {}
-                     ,gameProgress: Beginning
+                     ,gameProgress: InProgress
                      ,grid: emptyGrid
-                     ,nextTile: Empty
                      ,score: 0
                      ,tilePush: InputModel.None
-                     ,tilesToPlace: 3};
+                     ,tilesToPlace: 2};
    var Number = function (a) {
       return {ctor: "Number"
              ,_0: a};
@@ -757,7 +786,6 @@ Elm.GameModel.make = function (_elm) {
                            ,Number: Number
                            ,Empty: Empty
                            ,Grid: Grid
-                           ,Beginning: Beginning
                            ,InProgress: InProgress
                            ,GameOver: GameOver
                            ,Won: Won
@@ -793,11 +821,10 @@ Elm.InputModel.make = function (_elm) {
    var Text = Elm.Text.make(_elm);
    var Time = Elm.Time.make(_elm);
    var _op = {};
-   var delta = Time.fps(30);
    var randomFloats = function (s) {
-      return Random.floatList(Signal.sampleOn(delta)(Signal.constant(2)));
+      return Random.floatList(Signal.sampleOn(s)(Signal.constant(2)));
    };
-   var UserInput = function (a) {
+   var Controls = function (a) {
       return {_: {}
              ,tilePushDirection: a};
    };
@@ -841,23 +868,20 @@ Elm.InputModel.make = function (_elm) {
       Keyboard.arrows),
       Keyboard.wasd);
    }();
-   var userInput = A2(Signal._op["<~"],
-   UserInput,
-   Signal.dropRepeats(arrowsDirection));
-   var Input = F4(function (a,
+   var controls = A2(Signal._op["<~"],
+   Controls,
+   arrowsDirection);
+   var Input = F3(function (a,
    b,
-   c,
-   d) {
+   c) {
       return {_: {}
-             ,newGameButtonPressed: d
-             ,randomFloats: c
-             ,timeDelta: a
-             ,userInput: b};
+             ,controls: a
+             ,newGameButtonPressed: c
+             ,randomFloats: b};
    });
    _elm.InputModel.values = {_op: _op
                             ,arrowsDirection: arrowsDirection
-                            ,delta: delta
-                            ,userInput: userInput
+                            ,controls: controls
                             ,randomFloats: randomFloats
                             ,Up: Up
                             ,Down: Down
@@ -865,7 +889,7 @@ Elm.InputModel.make = function (_elm) {
                             ,Right: Right
                             ,None: None
                             ,Input: Input
-                            ,UserInput: UserInput};
+                            ,Controls: Controls};
    return _elm.InputModel.values;
 };Elm.Utils = Elm.Utils || {};
 Elm.Utils.make = function (_elm) {
@@ -912,50 +936,11 @@ Elm.Utils.make = function (_elm) {
                                                 ll._1)})};
                  case "[]":
                  return transpose(ll._1);}
-              break;
-            case "[]":
-            return _L.fromArray([]);}
-         _E.Case($moduleName,
-         "between lines 31 and 34");
-      }();
-   };
-   var groupedByTwo = function (l) {
-      return groupedByTwo$(A2(List.filter,
-      function (x) {
-         return !_U.eq(x,0);
-      },
-      l));
-   };
-   var groupedByTwo$ = function (l) {
-      return function () {
-         switch (l.ctor)
-         {case "::": switch (l._1.ctor)
-              {case "::":
-                 switch (l._1._1.ctor)
-                   {case "[]": return _U.eq(l._0,
-                        l._1._0) ? _L.fromArray([_L.fromArray([l._0
-                                                              ,l._1._0])]) : _L.fromArray([_L.fromArray([l._0])
-                                                                                          ,_L.fromArray([l._1._0])]);}
-                   return _U.eq(l._0,
-                   l._1._0) ? {ctor: "::"
-                              ,_0: _L.fromArray([l._0
-                                                ,l._1._0])
-                              ,_1: groupedByTwo(l._1._1)} : {ctor: "::"
-                                                            ,_0: _L.fromArray([l._0])
-                                                            ,_1: groupedByTwo({ctor: "::"
-                                                                              ,_0: l._1._0
-                                                                              ,_1: l._1._1})};
-                 case "[]":
-                 return _L.fromArray([_L.fromArray([l._0])]);}
-              break;
-            case "[]":
-            return _L.fromArray([]);}
+              break;}
          return _L.fromArray([]);
       }();
    };
    _elm.Utils.values = {_op: _op
-                       ,groupedByTwo: groupedByTwo
-                       ,groupedByTwo$: groupedByTwo$
                        ,transpose: transpose};
    return _elm.Utils.values;
 };

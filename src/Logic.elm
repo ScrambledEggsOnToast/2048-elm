@@ -18,6 +18,8 @@ All other rights reserved.
 
 module Logic where
 
+import Random
+
 import InputModel (
     Input
   , Direction
@@ -30,6 +32,7 @@ import InputModel (
 
 import GameModel (
     defaultGame
+  , emptyGrid
   , GameState
   , Tile
   , Number
@@ -45,19 +48,23 @@ import GameModel (
   , Won
   )
 
-import Utils (groupedByTwo, transpose)
+import Utils (transpose)
 
-import Random
+groupedByTwo : [Int] -> [[Int]] -- takes a list of ints and 'slides' them to 
+                                -- the left, removing 0s and joining in lists 
+                                -- pairs of adjacent identical ints.
+groupedByTwo l = groupedByTwo' <| filter (\x -> x/=0) l
+groupedByTwo' l = case l of
+    [x] -> [[x]]
+    [x,y] -> if (x == y) then [[x,y]] else [[x],[y]]
+    (x::y::xs) -> if (x == y) then ([x,y] :: (groupedByTwo xs)) 
+                    else ([x] :: (groupedByTwo (y::xs)))
+    otherwise -> []
 
-emptyTiles : Grid -> [(Int, Int)]
-emptyTiles (Grid g) = map (\(_,i,j) -> (i,j)) 
-                   <| filter (\(t,_,_) -> t == Empty) 
-                   <| concat
-                   <| zipWith (\j r -> map (\(t,i) -> (t,i,j)) r) [0..3] 
-                   <| map (\r -> zip r [0..3]) 
-                   <| g
-
-slideRow : [Tile] -> ([Tile], Int) -- slides list of tiles to left, merging tiles where necessary
+slideRow : [Tile] -> ([Tile], Int) -- slides list of tiles to left,
+                                   -- merging tiles where necessary,
+                                   -- and returning a full list of 
+                                   -- four tiles
 slideRow r = let groupedInts = groupedByTwo <| map tileToInt r 
     in (
         map intToTile 
@@ -68,94 +75,137 @@ slideRow r = let groupedInts = groupedByTwo <| map tileToInt r
         <| filter (\x -> length x > 1) groupedInts
     )
 
-slideGrid : Direction -> Grid -> (Grid, Int)
+slideGrid : Direction -> Grid -> (Grid, Int) -- slide all of the rows of a grid
+                                             -- in a certain direction
 slideGrid dir (Grid g) = let h = case dir of
-                            Left -> map slideRow g
-                            Right -> map (\(r,s) -> (reverse r,s)) 
-                                    <| map slideRow 
-                                    <| map reverse g
-                            Down -> (\x -> zip (transpose <| map fst x) (map snd x)) 
-                                    <| map slideRow 
-                                    <| transpose g
-                            Up -> (\x -> zip (transpose <| map fst x) (map snd x)) 
-                                    <| map (\(r,s) -> (reverse r,s)) 
-                                    <| map slideRow 
-                                    <| map reverse 
-                                    <| transpose g
-                            otherwise -> zip g [0,0,0,0]
-                        in (Grid (map fst h), sum <| map snd h)
+                    Left -> map slideRow g
+                    Right -> map (\(r,s) -> (reverse r,s)) 
+                            <| map slideRow 
+                            <| map reverse g
+                    Down -> (\x -> zip (transpose <| map fst x) (map snd x)) 
+                            <| map slideRow 
+                            <| transpose g
+                    Up -> (\x -> zip (transpose <| map fst x) (map snd x)) 
+                            <| map (\(r,s) -> (reverse r,s)) 
+                            <| map slideRow 
+                            <| map reverse 
+                            <| transpose g
+                    otherwise -> zip g [0,0,0,0]
+                in (Grid (map fst h), sum <| map snd h)
 
-gridFull : Grid -> Bool
-gridFull g = let
+gameLost : Grid -> Bool -- check if none of the rows or columns of a grid
+                        -- can be slid in any direction
+gameLost g = let
         up = fst <| slideGrid Up g
         down = fst <| slideGrid Down g
         left = fst <| slideGrid Left g
         right = fst <| slideGrid Right g
     in and 
         [
-          up == down
+          g /= emptyGrid
+        , up == down
         , down == left
         , left == right
+        , right == g
         ]
 
-tile2Probability : Float -- or tileNot4Probability
+tile2Probability : Float -- the probability that a new tile is a 2.
+                         -- equivalently, the probability that a new 
+                         -- tile is a 4
 tile2Probability = 0.9
 
-newTile : Float -> Tile
+newTile : Float -> Tile -- based on a float that will be random, 
+                        -- return a new tile
 newTile x = if (x < tile2Probability) then (Number 2) else (Number 4)
 
-newTileIndex : Float -> Grid -> Maybe (Int, Int)
+emptyTiles : Grid -> [(Int, Int)] -- a list of the coordinates of the empty 
+                                  -- tiles in a grid
+emptyTiles (Grid g) = map (\(_,i,j) -> (i,j)) 
+                   <| filter (\(t,_,_) -> t == Empty) 
+                   <| concat
+                   <| zipWith (\j r -> map (\(t,i) -> (t,i,j)) r) [0..3] 
+                   <| map (\r -> zip r [0..3]) 
+                   <| g
+
+newTileIndex : Float -> Grid -> Maybe (Int, Int) -- based on a float that will
+                                        -- be random, return Just the 
+                                        -- coordinates of an empty tile in a 
+                                        -- grid if one exists, or Nothing if 
+                                        -- there are none
 newTileIndex x g = let emptyTileIndices = emptyTiles g
     in case emptyTileIndices of 
         [] -> Nothing
         otherwise -> Just 
                     <| head 
-                    <| drop (floor <| (toFloat <| length emptyTileIndices) * x) emptyTileIndices
+                    <| (\y -> drop y emptyTileIndices)
+                    <| floor 
+                    <| (toFloat <| length emptyTileIndices) * x 
 
-inProgressGameState : GameState -> GameState
-inProgressGameState gameState = { gameState | gameProgress <- InProgress }
+lose : GameState -> GameState -- set a game to be at game over
+lose gameState = { gameState | gameProgress <- GameOver }
 
-gameOver : GameState -> GameState
-gameOver gameState = { gameState | gameProgress <- GameOver }
-
-win : GameState -> GameState
+win : GameState -> GameState -- set a game to be won
 win gameState = { gameState | gameProgress <- Won }
 
-placeRandomTile : Input -> GameState -> GameState
-placeRandomTile input gameState = { gameState |
-                                        nextTile <- newTile <| head <| input.randomFloats
-                                      , grid <- setTile 
-                                                (maybe (0,0) id <| newTileIndex (last input.randomFloats) 
-                                                gameState.grid) 
-                                                gameState.grid gameState.nextTile
-                                      , tilesToPlace <- gameState.tilesToPlace - 1
-                                  }
-
-noTilePushDirection : GameState -> GameState
+noTilePushDirection : GameState -> GameState -- set the last tile push 
+                                             -- direction to none
 noTilePushDirection gameState = { gameState | tilePush <- None }
 
-pushTiles : Input -> GameState -> GameState
-pushTiles input gameState = let newGridScore = slideGrid input.userInput.tilePushDirection gameState.grid in
-                                    if (fst newGridScore == gameState.grid) then gameState else
-                                        { gameState | 
-                                            tilePush <- input.userInput.tilePushDirection
-                                          , tilesToPlace <- gameState.tilesToPlace + 1
-                                          , grid <- fst newGridScore
-                                          , score <- gameState.score + snd newGridScore
-                                        }
+placeRandomTile : Input -> GameState -> GameState -- place a random tile into 
+                                                  -- a random position in the 
+                                                  -- grid
+placeRandomTile input gameState = 
+    { gameState |
+        grid <- setTile 
+                (maybe (0,0) id <| newTileIndex (last input.randomFloats) 
+                gameState.grid) 
+                gameState.grid 
+                <| newTile <| head <| input.randomFloats
+      , tilesToPlace <- gameState.tilesToPlace - 1
+    }
 
-gameWon : Grid -> Bool
+pushTiles : Input -> GameState -> GameState -- push the tiles in the grid 
+                                            -- according to the direction in 
+                                            -- the input
+pushTiles input gameState = 
+   let newGridScore = slideGrid input.controls.tilePushDirection gameState.grid
+    in if (fst newGridScore == gameState.grid) then gameState else
+        { gameState | 
+            tilePush <- input.controls.tilePushDirection
+          , tilesToPlace <- gameState.tilesToPlace + 1
+          , grid <- fst newGridScore
+          , score <- gameState.score + snd newGridScore
+        }
+
+gameWon : Grid -> Bool -- checks if a 2048 tile present in the grid
 gameWon (Grid g) = 0 /= (length <| filter (\t -> t == Number 2048) <| concat g)
 
 stepGame : Input -> GameState -> GameState
-stepGame input gameState = if | input.newGameButtonPressed -> defaultGame
-                              | gameState.gameProgress == GameOver -> gameState
-                              | gameState.gameProgress == Won -> gameState
-                              | gameWon gameState.grid -> win gameState
-                              | and [gridFull gameState.grid, gameState.gameProgress == InProgress] -> gameOver gameState
-                              | gameState.tilesToPlace > 0 -> placeRandomTile input gameState
-                              | gameState.gameProgress == Beginning -> inProgressGameState gameState
-                              | input.userInput.tilePushDirection == gameState.tilePush -> gameState
-                              | input.userInput.tilePushDirection == None -> noTilePushDirection gameState
-                              | input.userInput.tilePushDirection /= None -> pushTiles input gameState
-                              | otherwise -> gameState
+stepGame input gameState = 
+    if | input.newGameButtonPressed -- if the new game button is pressed
+            -> defaultGame          -- then start a new game
+       | gameState.gameProgress == GameOver -- else if the game is at game over
+            -> gameState                    -- then do nothing
+       | gameState.gameProgress == Won -- else if the game is won
+            -> gameState               -- then do nothing
+       | gameWon gameState.grid -- else if the grid contains a 2048 tile
+            -> win gameState    -- then set the game to be won
+       | gameLost gameState.grid -- else if the grid is completely fixed
+            -> lose gameState    -- then set the game to be lost
+       | gameState.tilesToPlace > 0            -- else if there is a tile to 
+                                               -- be placed
+            -> placeRandomTile input gameState -- then place a random tile
+       | input.controls.tilePushDirection == gameState.tilePush 
+                                -- else if the tile push direction input 
+                                -- hasn't changed
+            -> gameState        -- then do nothing
+       | input.controls.tilePushDirection == None -- else if the tile push 
+                                                  -- direction input has 
+                                                  -- changed to no direction
+            -> noTilePushDirection gameState      -- then store that input
+       | input.controls.tilePushDirection /= None -- else if the tile push has 
+                                                  -- changed to a direction
+            -> pushTiles input gameState          -- then push the tiles in 
+                                                  -- that direction and store 
+                                                  -- the input
+       | otherwise -> gameState -- else do nothing
