@@ -61,17 +61,18 @@ displayTile tile = case tile of
                        , toForm <| centered <| style (tileTextStyle tile) <| toText <| show n
                        ]
                     Empty -> collage (round tileSize) (round tileSize) 
-                       [ filled (tileColor tile) <| square tileSize ]
+                       [ filled (tileColor Empty) <| square tileSize ]
 
 displayGrid : Grid -> Element
 displayGrid (Grid ts) = let
-                    gridBox = filled (rgb 187 173 160) <| square (4*tileSize + 5*tileMargin)
+                    gridWidth = 4*tileSize + 5*tileMargin
+                    gridBox = filled (rgb 187 173 160) <| square gridWidth
                     tiles = map (\(t,i,j) -> move ((tileSize + tileMargin)*(i-1.5),(tileSize + tileMargin)*(j-1.5)) <| toForm <| displayTile t) 
                         <| concat 
                         <| zipWith (\j r -> map (\(t,i) -> (t,i,j)) r) [0..3] 
                         <| map (\r -> zip r [0..3]) 
                         <| ts
-    in collage (round <| 4*tileSize + 5*tileMargin) (round <| 4*tileSize + 5*tileMargin) ([gridBox] ++ tiles)
+    in collage (round gridWidth) (round gridWidth) ([gridBox] ++ tiles)
 
 display : (Int,Int) -> GameState -> Element
 display (w,h) gameState = displayGrid gameState.grid
