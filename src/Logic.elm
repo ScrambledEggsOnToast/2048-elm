@@ -1,3 +1,21 @@
+{--
+2048-elm
+
+Logic.elm
+
+Copyright (c) 2014 Josh Kirklin
+
+This source is subject to the MIT License.
+Please see the LICENSE file for more information.
+All other rights reserved.
+--}
+
+{------------------------------------------------------------------------------
+
+                                Game Logic
+
+------------------------------------------------------------------------------}
+
 module Logic where
 
 import InputModel (
@@ -29,12 +47,6 @@ import GameModel (
 import Utils (groupedByTwo, transpose)
 
 import Random
-
-{------------------------------------------------------------------------------
-
-Game Logic
-
-------------------------------------------------------------------------------}
 
 emptyTiles : Grid -> [(Int, Int)]
 emptyTiles (Grid g) = map (\(_,i,j) -> (i,j)) 

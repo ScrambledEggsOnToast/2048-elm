@@ -1,3 +1,21 @@
+{--
+2048-elm
+
+GameModel.elm
+
+Copyright (c) 2014 Josh Kirklin
+
+This source is subject to the MIT License.
+Please see the LICENSE file for more information.
+All other rights reserved.
+--}
+
+{------------------------------------------------------------------------------
+
+                                Game Model
+
+------------------------------------------------------------------------------}
+
 module GameModel where
 
 import InputModel (
@@ -8,12 +26,6 @@ import InputModel (
   , Right
   , None
   )
-
-{------------------------------------------------------------------------------
-
-Game Model
-
-------------------------------------------------------------------------------}
 
 data Tile = Number Int | Empty
 data Grid = Grid [[Tile]]

@@ -1,13 +1,25 @@
+{--
+2048-elm
+
+InputModel.elm
+
+Copyright (c) 2014 Josh Kirklin
+
+This source is subject to the MIT License.
+Please see the LICENSE file for more information.
+All other rights reserved.
+--}
+
+{------------------------------------------------------------------------------
+
+                                Input Model
+
+------------------------------------------------------------------------------}
+
 module InputModel where
 
 import Keyboard
 import Random
-
-{------------------------------------------------------------------------------
-
-Input Model
-
-------------------------------------------------------------------------------}
 
 type Input = { 
     timeDelta: Float

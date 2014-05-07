@@ -209,7 +209,7 @@ Elm.Rendering.make = function (_elm) {
               _L.fromArray([Graphics.Collage.filled(tileColor(tile))(Graphics.Collage.square(tileSize))
                            ,Graphics.Collage.toForm(Text.centered(Text.style(tileTextStyle(tile))(Text.toText(String.show(tile._0)))))]));}
          _E.Case($moduleName,
-         "between lines 57 and 64");
+         "between lines 69 and 76");
       }();
    };
    var displayGrid = function (_v8) {
@@ -225,7 +225,7 @@ Elm.Rendering.make = function (_elm) {
                                                        ,_0: (tileSize + tileMargin) * (_v15._1 - 1.5)
                                                        ,_1: (tileSize + tileMargin) * (_v15._2 - 1.5)})(Graphics.Collage.toForm(displayTile(_v15._0)));}
                        _E.Case($moduleName,
-                       "on line 70, column 46 to 143");
+                       "on line 82, column 46 to 143");
                     }();
                  })(List.concat(A2(List.zipWith,
                  F2(function (j,r) {
@@ -239,7 +239,7 @@ Elm.Rendering.make = function (_elm) {
                                     ,_1: _v11._1
                                     ,_2: j};}
                           _E.Case($moduleName,
-                          "on line 72, column 61 to 66");
+                          "on line 84, column 61 to 66");
                        }();
                     },
                     r);
@@ -262,7 +262,7 @@ Elm.Rendering.make = function (_elm) {
                  tiles));
               }();}
          _E.Case($moduleName,
-         "between lines 67 and 75");
+         "between lines 79 and 87");
       }();
    };
    var display = F2(function (_v20,
@@ -272,7 +272,7 @@ Elm.Rendering.make = function (_elm) {
          {case "_Tuple2":
             return displayGrid(gameState.grid);}
          _E.Case($moduleName,
-         "on line 78, column 27 to 53");
+         "on line 90, column 27 to 53");
       }();
    });
    _elm.Rendering.values = {_op: _op
@@ -384,7 +384,7 @@ Elm.Logic.make = function (_elm) {
                                          ,_0: List.reverse(_v4._0)
                                          ,_1: _v4._1};}
                                _E.Case($moduleName,
-                               "on line 61, column 54 to 65");
+                               "on line 73, column 54 to 65");
                             }();
                          })(List.map(slideRow)(A2(List.map,
                          List.reverse,
@@ -403,7 +403,7 @@ Elm.Logic.make = function (_elm) {
                                          ,_0: List.reverse(_v8._0)
                                          ,_1: _v8._1};}
                                _E.Case($moduleName,
-                               "on line 68, column 56 to 67");
+                               "on line 80, column 56 to 67");
                             }();
                          })(List.map(slideRow)(List.map(List.reverse)(Utils.transpose(_v0._0)))));}
                     return A2(List.zip,
@@ -419,7 +419,7 @@ Elm.Logic.make = function (_elm) {
                         h))};
               }();}
          _E.Case($moduleName,
-         "between lines 59 and 73");
+         "between lines 71 and 85");
       }();
    });
    var gridFull = function (g) {
@@ -472,7 +472,7 @@ Elm.Logic.make = function (_elm) {
                               ,_0: _v24._1
                               ,_1: _v24._2};}
                     _E.Case($moduleName,
-                    "on line 40, column 41 to 44");
+                    "on line 52, column 41 to 44");
                  }();
               })(List.filter(function (_v19) {
                  return function () {
@@ -481,7 +481,7 @@ Elm.Logic.make = function (_elm) {
                        return _U.eq(_v19._0,
                          GameModel.Empty);}
                     _E.Case($moduleName,
-                    "on line 41, column 43 to 53");
+                    "on line 53, column 43 to 53");
                  }();
               })(List.concat(A2(List.zipWith,
               F2(function (j,r) {
@@ -495,7 +495,7 @@ Elm.Logic.make = function (_elm) {
                                  ,_1: _v15._1
                                  ,_2: j};}
                        _E.Case($moduleName,
-                       "on line 43, column 56 to 61");
+                       "on line 55, column 56 to 61");
                     }();
                  },
                  r);
@@ -507,7 +507,7 @@ Elm.Logic.make = function (_elm) {
                  _L.range(0,3));
               })(_v12._0)))));}
          _E.Case($moduleName,
-         "between lines 40 and 45");
+         "between lines 52 and 57");
       }();
    };
    var newTileIndex = F2(function (x,
@@ -631,10 +631,10 @@ Elm.GameModel.make = function (_elm) {
                  {case "_Tuple2":
                     return List.head(List.drop(_v0._0)(List.head(List.drop(_v0._1)(_v1._0))));}
                  _E.Case($moduleName,
-                 "between lines 46 and 48");
+                 "between lines 58 and 60");
               }();}
          _E.Case($moduleName,
-         "between lines 46 and 48");
+         "between lines 58 and 60");
       }();
    });
    var setTile = F3(function (_v7,
@@ -662,10 +662,10 @@ Elm.GameModel.make = function (_elm) {
                          _v8._0))));
                       }();}
                  _E.Case($moduleName,
-                 "between lines 51 and 54");
+                 "between lines 63 and 66");
               }();}
          _E.Case($moduleName,
-         "between lines 51 and 54");
+         "between lines 63 and 66");
       }();
    });
    var Empty = {ctor: "Empty"};
@@ -863,7 +863,7 @@ Elm.Utils.make = function (_elm) {
             case "[]":
             return _L.fromArray([]);}
          _E.Case($moduleName,
-         "between lines 13 and 16");
+         "between lines 31 and 34");
       }();
    };
    var groupedByTwo = function (l) {

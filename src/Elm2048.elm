@@ -1,3 +1,21 @@
+{--
+2048-elm
+
+Elm2048.elm
+
+Copyright (c) 2014 Josh Kirklin
+
+This source is subject to the MIT License.
+Please see the LICENSE file for more information.
+All other rights reserved.
+--}
+
+{------------------------------------------------------------------------------
+
+                                    Main
+
+------------------------------------------------------------------------------}
+
 module Elm2048 where
 
 import Window

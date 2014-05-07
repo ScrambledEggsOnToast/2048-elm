@@ -1,12 +1,24 @@
-module Rendering where
+{--
+2048-elm
 
-import GameModel (Tile, Number, Empty, Grid, GameState)
+Rendering.elm
+
+Copyright (c) 2014 Josh Kirklin
+
+This source is subject to the MIT License.
+Please see the LICENSE file for more information.
+All other rights reserved.
+--}
 
 {------------------------------------------------------------------------------
 
-Rendering
+                                Rendering
 
 ------------------------------------------------------------------------------}
+
+module Rendering where
+
+import GameModel (Tile, Number, Empty, Grid, GameState)
 
 tileSize : Float
 tileSize = 106.25
