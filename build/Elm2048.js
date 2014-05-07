@@ -194,6 +194,25 @@ Elm.Rendering.make = function (_elm) {
    };
    var tileMargin = 15;
    var tileSize = 106.25;
+   var gridWidth = 4 * tileSize + 5 * tileMargin;
+   var displayGameOverOverlay = A3(Graphics.Collage.collage,
+   Basics.round(gridWidth),
+   Basics.round(gridWidth),
+   _L.fromArray([Graphics.Collage.filled(A4(Color.rgba,
+                238,
+                228,
+                218,
+                0.73))(Graphics.Collage.square(gridWidth))
+                ,Graphics.Collage.toForm(Text.centered(Text.style(tileTextStyle(GameModel.Number(2)))(Text.toText("Game over!"))))]));
+   var displayWonOverlay = A3(Graphics.Collage.collage,
+   Basics.round(gridWidth),
+   Basics.round(gridWidth),
+   _L.fromArray([Graphics.Collage.filled(A4(Color.rgba,
+                237,
+                194,
+                46,
+                0.5))(Graphics.Collage.square(gridWidth))
+                ,Graphics.Collage.toForm(Text.centered(Text.style(tileTextStyle(GameModel.Number(16)))(Text.toText("You win!"))))]));
    var displayTile = function (tile) {
       return function () {
          switch (tile.ctor)
@@ -209,7 +228,7 @@ Elm.Rendering.make = function (_elm) {
               _L.fromArray([Graphics.Collage.filled(tileColor(tile))(Graphics.Collage.square(tileSize))
                            ,Graphics.Collage.toForm(Text.centered(Text.style(tileTextStyle(tile))(Text.toText(String.show(tile._0)))))]));}
          _E.Case($moduleName,
-         "between lines 69 and 76");
+         "between lines 72 and 79");
       }();
    };
    var displayGrid = function (_v8) {
@@ -225,7 +244,7 @@ Elm.Rendering.make = function (_elm) {
                                                        ,_0: (tileSize + tileMargin) * (_v15._1 - 1.5)
                                                        ,_1: (tileSize + tileMargin) * (_v15._2 - 1.5)})(Graphics.Collage.toForm(displayTile(_v15._0)));}
                        _E.Case($moduleName,
-                       "on line 82, column 46 to 143");
+                       "on line 84, column 46 to 143");
                     }();
                  })(List.concat(A2(List.zipWith,
                  F2(function (j,r) {
@@ -239,7 +258,7 @@ Elm.Rendering.make = function (_elm) {
                                     ,_1: _v11._1
                                     ,_2: j};}
                           _E.Case($moduleName,
-                          "on line 84, column 61 to 66");
+                          "on line 86, column 61 to 66");
                        }();
                     },
                     r);
@@ -250,7 +269,6 @@ Elm.Rendering.make = function (_elm) {
                     r,
                     _L.range(0,3));
                  })(_v8._0))));
-                 var gridWidth = 4 * tileSize + 5 * tileMargin;
                  var gridBox = Graphics.Collage.filled(A3(Color.rgb,
                  187,
                  173,
@@ -262,7 +280,7 @@ Elm.Rendering.make = function (_elm) {
                  tiles));
               }();}
          _E.Case($moduleName,
-         "between lines 79 and 87");
+         "between lines 82 and 89");
       }();
    };
    var display = F2(function (_v20,
@@ -270,20 +288,33 @@ Elm.Rendering.make = function (_elm) {
       return function () {
          switch (_v20.ctor)
          {case "_Tuple2":
-            return displayGrid(gameState.grid);}
+            return _U.eq(gameState.gameProgress,
+              GameModel.GameOver) ? A3(Graphics.Collage.collage,
+              Basics.round(gridWidth),
+              Basics.round(gridWidth),
+              _L.fromArray([Graphics.Collage.toForm(displayGrid(gameState.grid))
+                           ,Graphics.Collage.toForm(displayGameOverOverlay)])) : _U.eq(gameState.gameProgress,
+              GameModel.Won) ? A3(Graphics.Collage.collage,
+              Basics.round(gridWidth),
+              Basics.round(gridWidth),
+              _L.fromArray([Graphics.Collage.toForm(displayGrid(gameState.grid))
+                           ,Graphics.Collage.toForm(displayWonOverlay)])) : displayGrid(gameState.grid);}
          _E.Case($moduleName,
-         "on line 90, column 27 to 53");
+         "between lines 106 and 108");
       }();
    });
    _elm.Rendering.values = {_op: _op
                            ,tileSize: tileSize
                            ,tileMargin: tileMargin
+                           ,gridWidth: gridWidth
                            ,tileColor: tileColor
                            ,tileTextColor: tileTextColor
                            ,tileTextSize: tileTextSize
                            ,tileTextStyle: tileTextStyle
                            ,displayTile: displayTile
                            ,displayGrid: displayGrid
+                           ,displayGameOverOverlay: displayGameOverOverlay
+                           ,displayWonOverlay: displayWonOverlay
                            ,display: display};
    return _elm.Rendering.values;
 };Elm.Logic = Elm.Logic || {};
@@ -318,14 +349,31 @@ Elm.Logic.make = function (_elm) {
    var Time = Elm.Time.make(_elm);
    var Utils = Elm.Utils.make(_elm);
    var _op = {};
+   var gameWon = function (_v0) {
+      return function () {
+         switch (_v0.ctor)
+         {case "Grid": return !_U.eq(0,
+              List.length(List.filter(function (t) {
+                 return _U.eq(t,
+                 GameModel.Number(2048));
+              })(List.concat(_v0._0))));}
+         _E.Case($moduleName,
+         "on line 148, column 20 to 79");
+      }();
+   };
    var noTilePushDirection = function (gameState) {
       return _U.replace([["tilePush"
                          ,InputModel.None]],
       gameState);
    };
-   var finishGameState = function (gameState) {
+   var win = function (gameState) {
       return _U.replace([["gameProgress"
-                         ,GameModel.Finished]],
+                         ,GameModel.Won]],
+      gameState);
+   };
+   var gameOver = function (gameState) {
+      return _U.replace([["gameProgress"
+                         ,GameModel.GameOver]],
       gameState);
    };
    var inProgressGameState = function (gameState) {
@@ -357,9 +405,9 @@ Elm.Logic.make = function (_elm) {
       }();
    };
    var slideGrid = F2(function (dir,
-   _v0) {
+   _v3) {
       return function () {
-         switch (_v0.ctor)
+         switch (_v3.ctor)
          {case "Grid":
             return function () {
                  var h = function () {
@@ -371,43 +419,43 @@ Elm.Logic.make = function (_elm) {
                             Basics.fst,
                             x)),
                             A2(List.map,Basics.snd,x));
-                         }(List.map(slideRow)(Utils.transpose(_v0._0)));
+                         }(List.map(slideRow)(Utils.transpose(_v3._0)));
                        case "Left": return A2(List.map,
                          slideRow,
-                         _v0._0);
+                         _v3._0);
                        case "Right":
-                       return List.map(function (_v4) {
+                       return List.map(function (_v7) {
                             return function () {
-                               switch (_v4.ctor)
+                               switch (_v7.ctor)
                                {case "_Tuple2":
                                   return {ctor: "_Tuple2"
-                                         ,_0: List.reverse(_v4._0)
-                                         ,_1: _v4._1};}
+                                         ,_0: List.reverse(_v7._0)
+                                         ,_1: _v7._1};}
                                _E.Case($moduleName,
-                               "on line 73, column 54 to 65");
+                               "on line 74, column 54 to 65");
                             }();
                          })(List.map(slideRow)(A2(List.map,
                          List.reverse,
-                         _v0._0)));
+                         _v3._0)));
                        case "Up": return function (x) {
                             return A2(List.zip,
                             Utils.transpose(A2(List.map,
                             Basics.fst,
                             x)),
                             A2(List.map,Basics.snd,x));
-                         }(List.map(function (_v8) {
+                         }(List.map(function (_v11) {
                             return function () {
-                               switch (_v8.ctor)
+                               switch (_v11.ctor)
                                {case "_Tuple2":
                                   return {ctor: "_Tuple2"
-                                         ,_0: List.reverse(_v8._0)
-                                         ,_1: _v8._1};}
+                                         ,_0: List.reverse(_v11._0)
+                                         ,_1: _v11._1};}
                                _E.Case($moduleName,
-                               "on line 80, column 56 to 67");
+                               "on line 81, column 56 to 67");
                             }();
-                         })(List.map(slideRow)(List.map(List.reverse)(Utils.transpose(_v0._0)))));}
+                         })(List.map(slideRow)(List.map(List.reverse)(Utils.transpose(_v3._0)))));}
                     return A2(List.zip,
-                    _v0._0,
+                    _v3._0,
                     _L.fromArray([0,0,0,0]));
                  }();
                  return {ctor: "_Tuple2"
@@ -419,7 +467,7 @@ Elm.Logic.make = function (_elm) {
                         h))};
               }();}
          _E.Case($moduleName,
-         "between lines 71 and 85");
+         "between lines 72 and 86");
       }();
    });
    var gridFull = function (g) {
@@ -460,42 +508,42 @@ Elm.Logic.make = function (_elm) {
          gameState);
       }();
    });
-   var emptyTiles = function (_v12) {
+   var emptyTiles = function (_v15) {
       return function () {
-         switch (_v12.ctor)
+         switch (_v15.ctor)
          {case "Grid":
-            return List.map(function (_v24) {
+            return List.map(function (_v27) {
                  return function () {
-                    switch (_v24.ctor)
+                    switch (_v27.ctor)
                     {case "_Tuple3":
                        return {ctor: "_Tuple2"
-                              ,_0: _v24._1
-                              ,_1: _v24._2};}
+                              ,_0: _v27._1
+                              ,_1: _v27._2};}
                     _E.Case($moduleName,
-                    "on line 52, column 41 to 44");
+                    "on line 53, column 41 to 44");
                  }();
-              })(List.filter(function (_v19) {
+              })(List.filter(function (_v22) {
                  return function () {
-                    switch (_v19.ctor)
+                    switch (_v22.ctor)
                     {case "_Tuple3":
-                       return _U.eq(_v19._0,
+                       return _U.eq(_v22._0,
                          GameModel.Empty);}
                     _E.Case($moduleName,
-                    "on line 53, column 43 to 53");
+                    "on line 54, column 43 to 53");
                  }();
               })(List.concat(A2(List.zipWith,
               F2(function (j,r) {
                  return A2(List.map,
-                 function (_v15) {
+                 function (_v18) {
                     return function () {
-                       switch (_v15.ctor)
+                       switch (_v18.ctor)
                        {case "_Tuple2":
                           return {ctor: "_Tuple3"
-                                 ,_0: _v15._0
-                                 ,_1: _v15._1
+                                 ,_0: _v18._0
+                                 ,_1: _v18._1
                                  ,_2: j};}
                        _E.Case($moduleName,
-                       "on line 55, column 56 to 61");
+                       "on line 56, column 56 to 61");
                     }();
                  },
                  r);
@@ -505,9 +553,9 @@ Elm.Logic.make = function (_elm) {
                  return A2(List.zip,
                  r,
                  _L.range(0,3));
-              })(_v12._0)))));}
+              })(_v15._0)))));}
          _E.Case($moduleName,
-         "between lines 52 and 57");
+         "between lines 53 and 58");
       }();
    };
    var newTileIndex = F2(function (x,
@@ -544,9 +592,10 @@ Elm.Logic.make = function (_elm) {
    var stepGame = F2(function (input,
    gameState) {
       return input.newGameButtonPressed ? GameModel.defaultGame : _U.eq(gameState.gameProgress,
-      GameModel.Finished) ? gameState : List.and(_L.fromArray([gridFull(gameState.grid)
-                                                              ,_U.eq(gameState.gameProgress,
-                                                              GameModel.InProgress)])) ? finishGameState(gameState) : _U.cmp(gameState.tilesToPlace,
+      GameModel.GameOver) ? gameState : _U.eq(gameState.gameProgress,
+      GameModel.Won) ? gameState : gameWon(gameState.grid) ? win(gameState) : List.and(_L.fromArray([gridFull(gameState.grid)
+                                                                                                    ,_U.eq(gameState.gameProgress,
+                                                                                                    GameModel.InProgress)])) ? gameOver(gameState) : _U.cmp(gameState.tilesToPlace,
       0) > 0 ? A2(placeRandomTile,
       input,
       gameState) : _U.eq(gameState.gameProgress,
@@ -566,10 +615,12 @@ Elm.Logic.make = function (_elm) {
                        ,newTile: newTile
                        ,newTileIndex: newTileIndex
                        ,inProgressGameState: inProgressGameState
-                       ,finishGameState: finishGameState
+                       ,gameOver: gameOver
+                       ,win: win
                        ,placeRandomTile: placeRandomTile
                        ,noTilePushDirection: noTilePushDirection
                        ,pushTiles: pushTiles
+                       ,gameWon: gameWon
                        ,stepGame: stepGame};
    return _elm.Logic.values;
 };Elm.GameModel = Elm.GameModel || {};
@@ -615,7 +666,8 @@ Elm.GameModel.make = function (_elm) {
              ,tilePush: b
              ,tilesToPlace: d};
    });
-   var Finished = {ctor: "Finished"};
+   var Won = {ctor: "Won"};
+   var GameOver = {ctor: "GameOver"};
    var InProgress = {ctor: "InProgress"};
    var Beginning = {ctor: "Beginning"};
    var Grid = function (a) {
@@ -707,7 +759,8 @@ Elm.GameModel.make = function (_elm) {
                            ,Grid: Grid
                            ,Beginning: Beginning
                            ,InProgress: InProgress
-                           ,Finished: Finished
+                           ,GameOver: GameOver
+                           ,Won: Won
                            ,GameState: GameState};
    return _elm.GameModel.values;
 };Elm.InputModel = Elm.InputModel || {};

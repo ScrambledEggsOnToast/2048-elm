@@ -39,9 +39,10 @@ import GameModel (
   , readTile
   , tileToInt
   , intToTile
-  , Finished
+  , GameOver
   , InProgress
   , Beginning
+  , Won
   )
 
 import Utils (groupedByTwo, transpose)
@@ -114,8 +115,11 @@ newTileIndex x g = let emptyTileIndices = emptyTiles g
 inProgressGameState : GameState -> GameState
 inProgressGameState gameState = { gameState | gameProgress <- InProgress }
 
-finishGameState : GameState -> GameState
-finishGameState gameState = { gameState | gameProgress <- Finished }
+gameOver : GameState -> GameState
+gameOver gameState = { gameState | gameProgress <- GameOver }
+
+win : GameState -> GameState
+win gameState = { gameState | gameProgress <- Won }
 
 placeRandomTile : Input -> GameState -> GameState
 placeRandomTile input gameState = { gameState |
@@ -140,10 +144,15 @@ pushTiles input gameState = let newGridScore = slideGrid input.userInput.tilePus
                                           , score <- gameState.score + snd newGridScore
                                         }
 
+gameWon : Grid -> Bool
+gameWon (Grid g) = 0 /= (length <| filter (\t -> t == Number 2048) <| concat g)
+
 stepGame : Input -> GameState -> GameState
 stepGame input gameState = if | input.newGameButtonPressed -> defaultGame
-                              | gameState.gameProgress == Finished -> gameState
-                              | and [gridFull gameState.grid, gameState.gameProgress == InProgress] -> finishGameState gameState
+                              | gameState.gameProgress == GameOver -> gameState
+                              | gameState.gameProgress == Won -> gameState
+                              | gameWon gameState.grid -> win gameState
+                              | and [gridFull gameState.grid, gameState.gameProgress == InProgress] -> gameOver gameState
                               | gameState.tilesToPlace > 0 -> placeRandomTile input gameState
                               | gameState.gameProgress == Beginning -> inProgressGameState gameState
                               | input.userInput.tilePushDirection == gameState.tilePush -> gameState

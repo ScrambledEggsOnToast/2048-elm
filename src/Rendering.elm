@@ -18,13 +18,16 @@ All other rights reserved.
 
 module Rendering where
 
-import GameModel (Tile, Number, Empty, Grid, GameState)
+import GameModel (Tile, Number, Empty, Grid, GameState, GameOver, Won)
 
 tileSize : Float
 tileSize = 106.25
 
 tileMargin : Float
 tileMargin = 15
+
+gridWidth : Float
+gridWidth = 4*tileSize + 5*tileMargin
 
 tileColor : Tile -> Color
 tileColor tile = case tile of
@@ -77,7 +80,6 @@ displayTile tile = case tile of
 
 displayGrid : Grid -> Element
 displayGrid (Grid ts) = let
-                    gridWidth = 4*tileSize + 5*tileMargin
                     gridBox = filled (rgb 187 173 160) <| square gridWidth
                     tiles = map (\(t,i,j) -> move ((tileSize + tileMargin)*(i-1.5),(tileSize + tileMargin)*(j-1.5)) <| toForm <| displayTile t) 
                         <| concat 
@@ -86,6 +88,22 @@ displayGrid (Grid ts) = let
                         <| ts
     in collage (round gridWidth) (round gridWidth) ([gridBox] ++ tiles)
 
+displayGameOverOverlay : Element
+displayGameOverOverlay = collage (round gridWidth) (round gridWidth)
+    [ 
+      filled (rgba 238 228 218 0.73) <| square gridWidth
+    , toForm <| centered <| style (tileTextStyle <| Number 2) <| toText "Game over!"
+    ]
+
+displayWonOverlay : Element
+displayWonOverlay = collage (round gridWidth) (round gridWidth)
+    [ 
+      filled (rgba 237 194 46 0.5) <| square gridWidth
+    , toForm <| centered <| style (tileTextStyle <| Number 16) <| toText "You win!"
+    ]
+
 display : (Int,Int) -> GameState -> Element
-display (w,h) gameState = displayGrid gameState.grid
+display (w,h) gameState = if | gameState.gameProgress == GameOver -> collage (round gridWidth) (round gridWidth) [toForm <| displayGrid gameState.grid, toForm <| displayGameOverOverlay]
+                             | gameState.gameProgress == Won -> collage (round gridWidth) (round gridWidth) [toForm <| displayGrid gameState.grid, toForm <| displayWonOverlay]
+                             | otherwise -> displayGrid gameState.grid
 

@@ -29,7 +29,7 @@ import InputModel (
 
 data Tile = Number Int | Empty
 data Grid = Grid [[Tile]]
-data Progress = Beginning | InProgress | Finished
+data Progress = Beginning | InProgress | GameOver | Won
 
 {-
 a grid is a list of lists, indexed by (i,j) it will be rendered as follows:
