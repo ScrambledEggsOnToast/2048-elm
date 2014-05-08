@@ -863,8 +863,7 @@ Elm.InputModel.make = function (_elm) {
    var Down = {ctor: "Down"};
    var Up = {ctor: "Up"};
    var playerDirection = function () {
-      var toDirection = F2(function (ds,
-      wasds) {
+      var toDirection = function (ds) {
          return _U.eq(ds,
          {_: {}
          ,x: 0
@@ -877,25 +876,15 @@ Elm.InputModel.make = function (_elm) {
          ,y: 0}) ? Right : _U.eq(ds,
          {_: {}
          ,x: -1
-         ,y: 0}) ? Left : _U.eq(wasds,
-         {_: {}
-         ,x: 0
-         ,y: 1}) ? Up : _U.eq(wasds,
-         {_: {}
-         ,x: 0
-         ,y: -1}) ? Down : _U.eq(wasds,
-         {_: {}
-         ,x: 1
-         ,y: 0}) ? Right : _U.eq(wasds,
-         {_: {}
-         ,x: -1
          ,y: 0}) ? Left : None;
-      });
-      return A2(Signal._op["~"],
+      };
+      return A2(Signal.merge,
       A2(Signal._op["<~"],
       toDirection,
       Keyboard.arrows),
-      Keyboard.wasd);
+      A2(Signal._op["<~"],
+      toDirection,
+      Keyboard.wasd));
    }();
    _elm.InputModel.values = {_op: _op
                             ,playerDirection: playerDirection
