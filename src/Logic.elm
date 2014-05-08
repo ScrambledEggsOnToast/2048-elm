@@ -43,6 +43,7 @@ import GameModel (
   , readTile
   , tileToInt
   , intToTile
+  , rotateGrid
   , GameOver
   , InProgress
   , Won
@@ -81,21 +82,33 @@ slideRow r = let groupedInts = groupedByTwo <| map tileToInt r
 
 slideGrid : Direction -> Grid -> (Grid, Int) -- slide all of the rows of a grid
                                              -- in a certain direction
-slideGrid dir (Grid g) = let h = case dir of
-                    Left -> map slideRow g
-                    Right -> map (\(r,s) -> (reverse r,s)) 
-                            <| map slideRow 
-                            <| map reverse g
-                    Down -> (\x -> zip (transpose <| map fst x) (map snd x)) 
-                            <| map slideRow 
-                            <| transpose g
-                    Up -> (\x -> zip (transpose <| map fst x) (map snd x)) 
-                            <| map (\(r,s) -> (reverse r,s)) 
-                            <| map slideRow 
-                            <| map reverse 
-                            <| transpose g
-                    otherwise -> zip g (repeat gridSize 0)
-                in (Grid (map fst h), sum <| map snd h)
+slideGrid dir grid = let 
+                rotatedGrid = case dir of
+                    Down  -> rotateGrid grid
+                    Right -> rotateGrid
+                          <| rotateGrid grid
+                    Up    -> rotateGrid
+                          <| rotateGrid
+                          <| rotateGrid grid
+                    otherwise -> grid
+
+                rowsWithScores = map slideRow
+                              <| (\(Grid h) -> h)
+                              <| rotatedGrid
+
+                slidRotatedGrid = Grid <| map fst rowsWithScores
+                scoreGained = sum <| map snd rowsWithScores
+
+                slidGrid = case dir of
+                    Up    -> rotateGrid slidRotatedGrid
+                    Right -> rotateGrid
+                          <| rotateGrid slidRotatedGrid
+                    Down  -> rotateGrid
+                          <| rotateGrid
+                          <| rotateGrid slidRotatedGrid
+                    otherwise -> slidRotatedGrid
+
+            in (slidGrid, scoreGained)
 
 pushTiles : Input -> GameState -> GameState -- push the tiles in the grid 
                                             -- according to the direction in 

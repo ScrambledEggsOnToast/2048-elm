@@ -88,7 +88,7 @@ displayTileAtCoordinates : (Tile, Int, Int) -> Form
 displayTileAtCoordinates (t,i,j) = let position = 
                         (
                           (tileSize + tileMargin) * (toFloat i - (toFloat gridSize - 1)/2)
-                        , (tileSize + tileMargin) * (toFloat j - (toFloat gridSize - 1)/2)
+                        , (-1) * (tileSize + tileMargin) * (toFloat j - (toFloat gridSize - 1)/2)
                         )
                     in move position <| toForm <| displayTile t
 

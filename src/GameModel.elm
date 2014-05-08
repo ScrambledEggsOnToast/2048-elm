@@ -18,10 +18,11 @@ All other rights reserved.
 
 module GameModel where
 
-import Utils ((!))
+import Utils ((!), transpose)
 
 data Tile = Number Int | Empty -- a tile can either contain an int, or be empty
-data Grid = Grid [[Tile]] -- a grid is a list of list of tiles
+data Grid = Grid [[Tile]] -- a grid is a list of lists of tiles
+
 data Progress = InProgress | GameOver | Won -- a game can be in progress, 
                                             -- at game over, or won
 
@@ -30,7 +31,10 @@ type GameState = { -- defines the various properties of a game state:
   , score: Int              -- the score
   , gameProgress: Progress  -- the progress of the game (in progress, 
                             -- game over etc.)
-  }
+}
+
+gridSize : Int -- the length of the sides of the grid
+gridSize = 4
 
 {------------------------------------------------------------------------------
                              Grid manipulation
@@ -58,12 +62,12 @@ intToTile n = case n of
     0 -> Empty
     otherwise -> Number n
 
+rotateGrid : Grid -> Grid -- rotate a grid clockwise by 90 degrees 
+rotateGrid (Grid g) = Grid <| map reverse <| transpose g
+
 {------------------------------------------------------------------------------
                              Initial gamestate
 ------------------------------------------------------------------------------}
-
-gridSize : Int
-gridSize = 4
 
 emptyGrid : Grid -- a grid of empty tiles
 emptyGrid = Grid <| repeat gridSize <| repeat gridSize <| Empty
@@ -73,5 +77,6 @@ defaultGame = {
     grid = emptyGrid            -- an empty grid
   , score = 0                   -- initial score is zero
   , gameProgress = InProgress   -- the game is in progress
-  }
+    }
+
 
