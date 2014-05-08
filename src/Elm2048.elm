@@ -10,28 +10,30 @@ Please see the LICENSE file for more information.
 All other rights reserved.
 --}
 
-{------------------------------------------------------------------------------
-
-                                    Main
-
-------------------------------------------------------------------------------}
-
 module Elm2048 where
 
 import Window
 
-import InputModel (Input, Controls, userDirection, randomFloats)
+import InputModel (Input, Controls, playerDirection, randomFloats)
 import GameModel (defaultGame)
 import Logic (stepGame)
 import Rendering (display)
+
+{------------------------------------------------------------------------------
+                               Ports and Inputs
+------------------------------------------------------------------------------}
 
 port score : Signal Int -- Outgoing score port
 port score = (\x -> x.score) <~ gameState
 
 port newGameButton : Signal Bool -- Incoming new game button port
 
-controls = Controls <~ userDirection ~ newGameButton
-input =  Input <~ controls ~ (randomFloats controls) 
+controls = Controls <~ playerDirection ~ newGameButton -- set up controls
+input =  Input <~ controls ~ (randomFloats controls) -- set up input
+
+{------------------------------------------------------------------------------
+                        Gamestate folding and display
+------------------------------------------------------------------------------}
 
 gameState = foldp stepGame defaultGame input -- fold the input into the game 
                                              -- state, starting with the 

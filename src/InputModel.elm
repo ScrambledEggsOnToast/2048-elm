@@ -24,32 +24,37 @@ import Random
 data Direction = Up | Down | Left | Right | None -- the direction to shift 
                                                  -- the grid
 
-type Controls = { 
-    tilePushDirection: Direction 
-  , newGameButtonPressed: Bool} -- define the user controls
+type Controls = { -- define the user controls
+    tilePushDirection: Direction  -- the direction the user wants to 
+                                  -- slide the grid
+  , newGameButtonPressed: Bool    -- whether the new game button is pressed
+} 
 
 type Input = { -- define the inputs that the game will depend upon:
     controls: Controls          -- the user controls
   , randomFloats: [Float]       -- a source of randomness
-  }
+}
 
-userDirection : Signal Direction -- make a signal that is the direction 
+{------------------------------------------------------------------------------
+                               Player controls
+------------------------------------------------------------------------------}
+
+playerDirection : Signal Direction -- make a signal that is the direction 
                                  -- that the user has chosen. compatible
                                  -- with both the wasd and arrow keys
-userDirection = let toDirection ds wasds = 
+playerDirection = let toDirection ds  = 
                       if | ds == {x=0,y=1} -> Up
                          | ds == {x=0,y=-1} -> Down
                          | ds == {x=1,y=0} -> Right
                          | ds == {x=-1,y=0} -> Left
-                         | wasds == {x=0,y=1} -> Up
-                         | wasds == {x=0,y=-1} -> Down
-                         | wasds == {x=1,y=0} -> Right
-                         | wasds == {x=-1,y=0} -> Left
                          | otherwise -> None
-    in toDirection <~ Keyboard.arrows ~ Keyboard.wasd
+    in merge (toDirection <~ Keyboard.arrows) (toDirection <~ Keyboard.wasd)
 
+{------------------------------------------------------------------------------
+                                Random data
+------------------------------------------------------------------------------}
 
-randomFloats : Signal a -> Signal [Float] -- provides four  random floats that 
+randomFloats : Signal a -> Signal [Float] -- provides four random floats that 
                                           -- will be used for random events in 
                                           -- the game logic. changes every time
                                           -- the signal s changes

@@ -18,14 +18,7 @@ All other rights reserved.
 
 module GameModel where
 
-import InputModel (
-    Direction
-  , Up
-  , Down
-  , Left
-  , Right
-  , None
-  )
+import Utils ((!))
 
 data Tile = Number Int | Empty -- a tile can either contain an int, or be empty
 data Grid = Grid [[Tile]] -- a grid is a list of list of tiles
@@ -39,18 +32,17 @@ type GameState = { -- defines the various properties of a game state:
                             -- game over etc.)
   }
 
-emptyGrid : Grid -- a 4x4 grid of empty tiles
-emptyGrid = Grid <| repeat 4 <| repeat 4 <| Empty
+{------------------------------------------------------------------------------
+                             Grid manipulation
+------------------------------------------------------------------------------}
 
 readTile : (Int, Int) -> Grid -> Tile -- the tile at (i,j) in a grid
-readTile (i, j) (Grid g) = head <| drop i -- ith column
-                        <| head <| drop j -- jth row
-                        <| g
+readTile (i, j) (Grid g) = (g ! j) ! i
 
 setTile : (Int, Int) -> Grid -> Tile -> Grid -- change the tile at (i,j) in 
                                              -- a grid
 setTile (i, j) (Grid g) t = let 
-        r = head <| drop j <| g -- jth row
+        r = g ! j -- jth row
         nr = (take i r) ++ [t] ++ (drop (i+1) r) -- ith element changed in
                                                  -- jth row
     in Grid <| (take j g) ++ [nr] ++ (drop (j+1) g) -- new grid with modified 
@@ -66,10 +58,20 @@ intToTile n = case n of
     0 -> Empty
     otherwise -> Number n
 
+{------------------------------------------------------------------------------
+                             Initial gamestate
+------------------------------------------------------------------------------}
+
+gridSize : Int
+gridSize = 4
+
+emptyGrid : Grid -- a grid of empty tiles
+emptyGrid = Grid <| repeat gridSize <| repeat gridSize <| Empty
+
 defaultGame : GameState -- the default starting game state:
 defaultGame = { 
     grid = emptyGrid            -- an empty grid
   , score = 0                   -- initial score is zero
-  , gameProgress = InProgress   -- a new game is beginning
+  , gameProgress = InProgress   -- the game is in progress
   }
 
