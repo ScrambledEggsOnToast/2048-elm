@@ -34,9 +34,6 @@ data Progress = InProgress | GameOver | Won -- a game can be in progress,
 
 type GameState = { -- defines the various properties of a game state:
     grid: Grid              -- the grid of tiles
-  , tilePush: Direction     -- the direction that the tile push input was
-                            -- last known to be
-  , tilesToPlace: Int       -- the number of tiles that need to be placed
   , score: Int              -- the score
   , gameProgress: Progress  -- the progress of the game (in progress, 
                             -- game over etc.)
@@ -72,10 +69,6 @@ intToTile n = case n of
 defaultGame : GameState -- the default starting game state:
 defaultGame = { 
     grid = emptyGrid            -- an empty grid
-  , tilePush = None             -- no tile push input yet
-  , tilesToPlace = 2            -- the number of initial tiles to place 
-                                -- (plus one to allow the game to generate 
-                                -- random tiles)
   , score = 0                   -- initial score is zero
   , gameProgress = InProgress   -- a new game is beginning
   }

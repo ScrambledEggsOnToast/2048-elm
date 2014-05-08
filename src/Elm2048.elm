@@ -20,7 +20,7 @@ module Elm2048 where
 
 import Window
 
-import InputModel (Input, controls, randomFloats)
+import InputModel (Input, Controls, userDirection, randomFloats)
 import GameModel (defaultGame)
 import Logic (stepGame)
 import Rendering (display)
@@ -30,12 +30,8 @@ port score = (\x -> x.score) <~ gameState
 
 port newGameButton : Signal Bool -- Incoming new game button port
 
-delta = fps 30 -- rate at which the game performs actions
-input = sampleOn delta -- sample the input every time an event occurs in delta
-            <| Input 
-            <~ controls 
-             ~ (randomFloats delta) 
-             ~ newGameButton 
+controls = Controls <~ userDirection ~ newGameButton
+input =  Input <~ controls ~ (randomFloats controls) 
 
 gameState = foldp stepGame defaultGame input -- fold the input into the game 
                                              -- state, starting with the 

@@ -48,7 +48,7 @@ import GameModel (
   , Won
   )
 
-import Utils (transpose)
+import Utils (transpose, (!))
 
 groupedByTwo : [Int] -> [[Int]] -- takes a list of ints and 'slides' them to 
                                 -- the left, removing 0s and joining in lists 
@@ -147,22 +147,19 @@ lose gameState = { gameState | gameProgress <- GameOver }
 win : GameState -> GameState -- set a game to be won
 win gameState = { gameState | gameProgress <- Won }
 
-noTilePushDirection : GameState -> GameState -- set the last tile push 
-                                             -- direction to none
-noTilePushDirection gameState = { gameState | tilePush <- None }
 
-placeRandomTile : Input -> GameState -> GameState -- place a random tile into 
+placeRandomTile : Float -> Float -> GameState -> GameState -- place a random tile into 
                                                   -- a random position in the 
                                                   -- grid
-placeRandomTile input gameState = 
-    { gameState |
-        grid <- setTile 
-                (maybe (0,0) id <| newTileIndex (last input.randomFloats) 
-                gameState.grid) 
-                gameState.grid 
-                <| newTile <| head <| input.randomFloats
-      , tilesToPlace <- gameState.tilesToPlace - 1
-    }
+placeRandomTile float1 float2 gameState = 
+    let tileIndex = newTileIndex float1 gameState.grid
+    in if (tileIndex == Nothing) then gameState else
+        { gameState |
+            grid <- setTile 
+                    (maybe (0,0) id <| tileIndex)
+                    gameState.grid 
+                    <| newTile float2
+        }
 
 pushTiles : Input -> GameState -> GameState -- push the tiles in the grid 
                                             -- according to the direction in 
@@ -171,19 +168,22 @@ pushTiles input gameState =
    let newGridScore = slideGrid input.controls.tilePushDirection gameState.grid
     in if (fst newGridScore == gameState.grid) then gameState else
         { gameState | 
-            tilePush <- input.controls.tilePushDirection
-          , tilesToPlace <- gameState.tilesToPlace + 1
-          , grid <- fst newGridScore
+            grid <- fst newGridScore
           , score <- gameState.score + snd newGridScore
         }
 
 gameWon : Grid -> Bool -- checks if a 2048 tile present in the grid
 gameWon (Grid g) = 0 /= (length <| filter (\t -> t == Number 2048) <| concat g)
 
+newGame : Input -> GameState
+newGame input = placeRandomTile (input.randomFloats ! 0) (input.randomFloats ! 1)
+             <| placeRandomTile (input.randomFloats ! 2) (input.randomFloats ! 3)
+             <| defaultGame
+
 stepGame : Input -> GameState -> GameState
 stepGame input gameState = 
-    if | input.newGameButtonPressed -- if the new game button is pressed
-            -> defaultGame          -- then start a new game
+    if | input.controls.newGameButtonPressed -- if the new game button is pressed
+            -> newGame input          -- then start a new game
        | gameState.gameProgress == GameOver -- else if the game is at game over
             -> gameState                    -- then do nothing
        | gameState.gameProgress == Won -- else if the game is won
@@ -192,20 +192,13 @@ stepGame input gameState =
             -> win gameState    -- then set the game to be won
        | gameLost gameState.grid -- else if the grid is completely fixed
             -> lose gameState    -- then set the game to be lost
-       | gameState.tilesToPlace > 0            -- else if there is a tile to 
-                                               -- be placed
-            -> placeRandomTile input gameState -- then place a random tile
-       | input.controls.tilePushDirection == gameState.tilePush 
-                                -- else if the tile push direction input 
-                                -- hasn't changed
-            -> gameState        -- then do nothing
-       | input.controls.tilePushDirection == None -- else if the tile push 
-                                                  -- direction input has 
-                                                  -- changed to no direction
-            -> noTilePushDirection gameState      -- then store that input
        | input.controls.tilePushDirection /= None -- else if the tile push has 
                                                   -- changed to a direction
-            -> pushTiles input gameState          -- then push the tiles in 
-                                                  -- that direction and store 
-                                                  -- the input
+            -> let pushedState = pushTiles input gameState
+                in if (pushedState == gameState) then gameState
+                    else placeRandomTile 
+                        (input.randomFloats ! 0) 
+                        (input.randomFloats ! 1) 
+                        pushedState -- then place a new tile
+                                                  -- that direction
        | otherwise -> gameState -- else do nothing
