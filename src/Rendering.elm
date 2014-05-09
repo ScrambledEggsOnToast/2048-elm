@@ -24,6 +24,7 @@ import GameModel (
   , Empty
   , Grid
   , gridSize
+  , tilesWithCoordinates
   , GameState
   , GameOver
   , Won
@@ -111,20 +112,11 @@ gridWidth : Float -- the width of the entire game grid
 gridWidth = (toFloat gridSize) * tileSize + (1 + toFloat gridSize) * tileMargin
 
 displayGrid : Grid -> Element -- display a grid
-displayGrid (Grid ts) = let
+displayGrid g = let
                     gridBox = filled (rgb 187 173 160) -- the grid background
                                 <| square gridWidth
                     tiles = map displayTileAtCoordinates 
-                        <| concat -- a list of the tiles with their row and 
-                                  -- column coordinates
-                        <| zipWith (\j r -> map (\(t,i) -> (t,i,j)) r) 
-                            [0..(gridSize-1)] 
-                                -- the tiles with row and column 
-                                -- coordinates attached
-                        <| map (\r -> zip r [0..(gridSize-1)]) -- the tiles 
-                                                    -- with a row coordinate
-                                                    -- coordinate attached
-                        <| ts -- the tiles
+                        <| tilesWithCoordinates g
     in collage (round gridWidth) (round gridWidth) ([gridBox] ++ tiles)
 
 {------------------------------------------------------------------------------

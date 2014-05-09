@@ -18,8 +18,6 @@ All other rights reserved.
 
 module Logic where
 
-import Random
-
 import InputModel (
     Input
   , Direction
@@ -31,21 +29,22 @@ import InputModel (
   )
 
 import GameModel (
-    defaultGame
-  , emptyGrid
-  , gridSize
-  , GameState
+    GameState
   , Tile
   , Number
   , Empty
+  , defaultGame
+  , emptyGrid
+  , gridSize
   , Grid
   , setTile
   , readTile
   , tileToInt
   , intToTile
+  , tilesWithCoordinates
   , rotateGrid
-  , GameOver
   , InProgress
+  , GameOver
   , Won
   )
 
@@ -56,8 +55,8 @@ import Utils ((!))
 ------------------------------------------------------------------------------}
 
 groupedByTwo : [a] -> [[a]] -- takes a list of values and 'slides' them to 
-                                -- the left, removing 0s and joining in lists 
-                                -- pairs of adjacent identical values.
+                                -- the left, joining in lists pairs of adjacent
+                                -- identical values.
 groupedByTwo l = case l of
     [x] -> [[x]]
     [x,y] -> if (x == y) then [[x,y]] else [[x],[y]]
@@ -70,29 +69,25 @@ slideRow : [Tile] -> ([Tile], Int) -- slides list of tiles to left,
                                    -- and returning a full list of 
                                    -- four tiles, and the number of
                                    -- points gained
-slideRow r = let groupedInts = groupedByTwo 
-                            <| filter (\x -> x /= 0) 
-                            <| map tileToInt r 
+slideRow r = let grouped = groupedByTwo <| filter (\t -> t /= Empty) r
     in (
-        map intToTile 
-        <| take gridSize 
-        <| ((map sum groupedInts) ++ (repeat gridSize 0))
-      , sum 
+        take gridSize 
+        <| (map ( intToTile . sum . (map tileToInt)) grouped) 
+            ++ repeat gridSize Empty
+      , sum . (map tileToInt)
         <| concat 
-        <| filter (\x -> length x > 1) groupedInts
+        <| filter (\x -> length x > 1) grouped
     )
 
 slideGrid : Direction -> Grid -> (Grid, Int) -- slide all of the rows of a grid
                                              -- in a certain direction
-slideGrid dir grid = let 
-                rotatedGrid = case dir of
-                    Down  -> rotateGrid grid
-                    Right -> rotateGrid
-                          <| rotateGrid grid
-                    Up    -> rotateGrid
-                          <| rotateGrid
-                          <| rotateGrid grid
-                    otherwise -> grid
+slideGrid dir grid = if (dir == None) then (grid,0) else let 
+                rotatedGrid = (case dir of
+                    Down  -> rotateGrid 
+                    Right -> rotateGrid . rotateGrid 
+                    Up    -> rotateGrid . rotateGrid . rotateGrid
+                    otherwise -> id)
+                    <| grid
 
                 rowsWithScores = map slideRow
                               <| (\(Grid h) -> h)
@@ -101,21 +96,19 @@ slideGrid dir grid = let
                 slidRotatedGrid = Grid <| map fst rowsWithScores
                 scoreGained = sum <| map snd rowsWithScores
 
-                slidGrid = case dir of
-                    Up    -> rotateGrid slidRotatedGrid
-                    Right -> rotateGrid
-                          <| rotateGrid slidRotatedGrid
-                    Down  -> rotateGrid
-                          <| rotateGrid
-                          <| rotateGrid slidRotatedGrid
-                    otherwise -> slidRotatedGrid
+                slidGrid = (case dir of
+                    Up  -> rotateGrid 
+                    Right -> rotateGrid . rotateGrid 
+                    Down    -> rotateGrid . rotateGrid . rotateGrid
+                    otherwise -> id)
+                    <| slidRotatedGrid
 
             in (slidGrid, scoreGained)
 
-pushTiles : Input -> GameState -> GameState -- push the tiles in the grid 
+slideGameState : Input -> GameState -> GameState -- push the tiles in the grid 
                                             -- according to the direction in 
                                             -- the input
-pushTiles input gameState = 
+slideGameState input gameState = 
    let newGridScore = slideGrid input.controls.tilePushDirection gameState.grid
     in if (fst newGridScore == gameState.grid) then gameState else
         { gameState | 
@@ -167,12 +160,9 @@ newTile x = if (x < tile2Probability) then (Number 2) else (Number 4)
 
 emptyTiles : Grid -> [(Int, Int)] -- a list of the coordinates of the empty 
                                   -- tiles in a grid
-emptyTiles (Grid g) = map (\(_,i,j) -> (i,j)) 
+emptyTiles g = map (\(_,i,j) -> (i,j)) 
                    <| filter (\(t,_,_) -> t == Empty) 
-                   <| concat
-                   <| zipWith (\j r -> map (\(t,i) -> (t,i,j)) r) [0..(gridSize-1)] 
-                   <| map (\r -> zip r [0..(gridSize-1)]) 
-                   <| g
+                   <| tilesWithCoordinates g
 
 newTileIndex : Float -> Grid -> Maybe (Int, Int) -- based on a float that will
                                         -- be random, return Just the 
@@ -227,9 +217,9 @@ stepGame input gameState =
        | gameLost gameState.grid -- else if the grid is completely fixed
             -> lose gameState    -- then set the game to be lost
 
-       | input.controls.tilePushDirection /= None -- else if the tile push has 
-                                                  -- changed to a direction
-            -> let pushedState = pushTiles input gameState -- then try to push 
+       | input.controls.tilePushDirection /= None -- else if the controls
+                                                  -- indicate a tile push
+            -> let pushedState = slideGameState input gameState -- then try to push 
                                                 -- the tiles in that direction
                 in if (pushedState == gameState) then gameState 
                                 -- check whether the grid has actually changed

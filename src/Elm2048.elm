@@ -13,7 +13,7 @@ All other rights reserved.
 module Elm2048 where
 
 import InputModel (Input, Controls, playerDirection, randomFloats)
-import GameModel (defaultGame)
+import GameModel (defaultGame, GameState)
 import Logic (stepGame)
 import Rendering (display)
 
@@ -33,6 +33,7 @@ input =  Input <~ controls ~ (randomFloats controls) -- set up input
                         Gamestate folding and display
 ------------------------------------------------------------------------------}
 
+gameState : Signal GameState
 gameState = foldp stepGame defaultGame input -- fold the input into the game 
                                              -- state, starting with the 
                                              -- default game state

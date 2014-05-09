@@ -62,6 +62,14 @@ intToTile n = case n of
     0 -> Empty
     otherwise -> Number n
 
+tilesWithCoordinates : Grid -> [(Tile,Int,Int)] -- a list of the tiles in a grid 
+                                                -- with their coordinates
+tilesWithCoordinates (Grid g) = concat
+                   <| zipWith (\j r -> map (\(t,i) -> (t,i,j)) r) 
+                        [0..(gridSize-1)] 
+                   <| map (\r -> zip r [0..(gridSize-1)]) 
+                   <| g
+
 rotateGrid : Grid -> Grid -- rotate a grid clockwise by 90 degrees 
 rotateGrid (Grid g) = Grid <| map reverse <| transpose g
 
