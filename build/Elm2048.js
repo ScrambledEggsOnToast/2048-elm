@@ -29,7 +29,6 @@ Elm.Elm2048.make = function (_elm) {
    var String = Elm.String.make(_elm);
    var Text = Elm.Text.make(_elm);
    var Time = Elm.Time.make(_elm);
-   var Window = Elm.Window.make(_elm);
    var _op = {};
    var newGameButton = Native.Ports.portIn("newGameButton",
    Native.Ports.incomingSignal(function (v) {
@@ -49,10 +48,8 @@ Elm.Elm2048.make = function (_elm) {
    Logic.stepGame,
    GameModel.defaultGame,
    input);
-   var main = A2(Signal._op["~"],
-   A2(Signal._op["<~"],
+   var main = A2(Signal._op["<~"],
    Rendering.display,
-   Window.dimensions),
    gameState);
    var score = Native.Ports.portOut("score",
    Native.Ports.outgoingSignal(function (v) {
@@ -98,6 +95,18 @@ Elm.Rendering.make = function (_elm) {
    var Text = Elm.Text.make(_elm);
    var Time = Elm.Time.make(_elm);
    var _op = {};
+   var wonMessage = "You won!";
+   var gameOverMessage = "Game over!";
+   var wonOverlayColor = A4(Color.rgba,
+   237,
+   194,
+   46,
+   0.5);
+   var gameOverOverlayColor = A4(Color.rgba,
+   238,
+   228,
+   218,
+   0.73);
    var tileTextSize = function (tile) {
       return function () {
          switch (tile.ctor)
@@ -137,6 +146,8 @@ Elm.Rendering.make = function (_elm) {
                                      ,"Arial"
                                      ,"sans-serif"])};
    };
+   var gameOverOverlayStyle = tileTextStyle(GameModel.Number(2));
+   var wonOverlayStyle = tileTextStyle(GameModel.Number(16));
    var tileColor = function (tile) {
       return function () {
          switch (tile.ctor)
@@ -212,7 +223,7 @@ Elm.Rendering.make = function (_elm) {
                  _L.fromArray([tileBackground
                               ,Graphics.Collage.toForm(Text.centered(Text.style(tileTextStyle(tile))(Text.toText(String.show(tile._0)))))]));}
             _E.Case($moduleName,
-            "between lines 76 and 85");
+            "between lines 85 and 98");
          }();
       }();
    };
@@ -227,7 +238,7 @@ Elm.Rendering.make = function (_elm) {
                  return Graphics.Collage.move(position)(Graphics.Collage.toForm(displayTile(_v8._0)));
               }();}
          _E.Case($moduleName,
-         "between lines 88 and 93");
+         "between lines 101 and 108");
       }();
    };
    var gridWidth = Basics.toFloat(GameModel.gridSize) * tileSize + (1 + Basics.toFloat(GameModel.gridSize)) * tileMargin;
@@ -248,7 +259,7 @@ Elm.Rendering.make = function (_elm) {
                                     ,_1: _v16._1
                                     ,_2: j};}
                           _E.Case($moduleName,
-                          "on line 109, column 61 to 66");
+                          "on line 120, column 61 to 66");
                        }();
                     },
                     r);
@@ -271,7 +282,7 @@ Elm.Rendering.make = function (_elm) {
                  tiles));
               }();}
          _E.Case($moduleName,
-         "between lines 103 and 115");
+         "between lines 114 and 128");
       }();
    };
    var displayOverlay = F3(function (s,
@@ -284,33 +295,32 @@ Elm.Rendering.make = function (_elm) {
                    ,Graphics.Collage.toForm(Text.centered(Text.style(s)(Text.toText(t))))]));
    });
    var displayGameOverOverlay = A3(displayOverlay,
-   tileTextStyle(GameModel.Number(2)),
-   A4(Color.rgba,238,228,218,0.73),
-   "Game over!");
+   gameOverOverlayStyle,
+   gameOverOverlayColor,
+   gameOverMessage);
    var displayWonOverlay = A3(displayOverlay,
-   tileTextStyle(GameModel.Number(16)),
-   A4(Color.rgba,237,194,46,0.5),
-   "You win!");
-   var display = F2(function (_v20,
-   gameState) {
-      return function () {
-         switch (_v20.ctor)
-         {case "_Tuple2":
-            return _U.eq(gameState.gameProgress,
-              GameModel.GameOver) ? A3(Graphics.Collage.collage,
-              Basics.round(gridWidth),
-              Basics.round(gridWidth),
-              _L.fromArray([Graphics.Collage.toForm(displayGrid(gameState.grid))
-                           ,Graphics.Collage.toForm(displayGameOverOverlay)])) : _U.eq(gameState.gameProgress,
-              GameModel.Won) ? A3(Graphics.Collage.collage,
-              Basics.round(gridWidth),
-              Basics.round(gridWidth),
-              _L.fromArray([Graphics.Collage.toForm(displayGrid(gameState.grid))
-                           ,Graphics.Collage.toForm(displayWonOverlay)])) : displayGrid(gameState.grid);}
-         _E.Case($moduleName,
-         "between lines 148 and 160");
-      }();
+   wonOverlayStyle,
+   wonOverlayColor,
+   wonMessage);
+   var applyOverlay = F2(function (overlay,
+   grid) {
+      return A3(Graphics.Collage.collage,
+      Basics.round(gridWidth),
+      Basics.round(gridWidth),
+      _L.fromArray([Graphics.Collage.toForm(grid)
+                   ,Graphics.Collage.toForm(overlay)]));
    });
+   var display = function (gameState) {
+      return function () {
+         var _v20 = gameState.gameProgress;
+         switch (_v20.ctor)
+         {case "GameOver":
+            return applyOverlay(displayGameOverOverlay);
+            case "Won":
+            return applyOverlay(displayWonOverlay);}
+         return Basics.id;
+      }()(displayGrid(gameState.grid));
+   };
    _elm.Rendering.values = {_op: _op
                            ,tileSize: tileSize
                            ,tileMargin: tileMargin
@@ -323,8 +333,15 @@ Elm.Rendering.make = function (_elm) {
                            ,gridWidth: gridWidth
                            ,displayGrid: displayGrid
                            ,displayOverlay: displayOverlay
+                           ,gameOverOverlayStyle: gameOverOverlayStyle
+                           ,wonOverlayStyle: wonOverlayStyle
+                           ,gameOverOverlayColor: gameOverOverlayColor
+                           ,wonOverlayColor: wonOverlayColor
+                           ,gameOverMessage: gameOverMessage
+                           ,wonMessage: wonMessage
                            ,displayGameOverOverlay: displayGameOverOverlay
                            ,displayWonOverlay: displayWonOverlay
+                           ,applyOverlay: applyOverlay
                            ,display: display};
    return _elm.Rendering.values;
 };Elm.Logic = Elm.Logic || {};

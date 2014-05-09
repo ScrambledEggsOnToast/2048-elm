@@ -49,7 +49,7 @@ import GameModel (
   , Won
   )
 
-import Utils (transpose, (!))
+import Utils ((!))
 
 {------------------------------------------------------------------------------
                                 Tile sliding

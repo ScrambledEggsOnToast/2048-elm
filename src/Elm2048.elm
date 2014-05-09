@@ -12,8 +12,6 @@ All other rights reserved.
 
 module Elm2048 where
 
-import Window
-
 import InputModel (Input, Controls, playerDirection, randomFloats)
 import GameModel (defaultGame)
 import Logic (stepGame)
@@ -39,4 +37,4 @@ gameState = foldp stepGame defaultGame input -- fold the input into the game
                                              -- state, starting with the 
                                              -- default game state
 
-main = display <~ Window.dimensions ~ gameState -- display the game
+main = display <~ gameState -- display the game

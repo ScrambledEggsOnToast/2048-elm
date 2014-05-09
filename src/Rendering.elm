@@ -18,7 +18,16 @@ All other rights reserved.
 
 module Rendering where
 
-import GameModel (Tile, Number, Empty, Grid, GameState, GameOver, Won, gridSize)
+import GameModel (
+    Tile
+  , Number
+  , Empty
+  , Grid
+  , gridSize
+  , GameState
+  , GameOver
+  , Won
+  )
 
 {------------------------------------------------------------------------------
                               Displaying a tile
@@ -84,20 +93,22 @@ displayTile tile = let tileBackground = filled (tileColor tile)
                     Empty -> collage (round tileSize) (round tileSize) 
                        [ tileBackground ] -- just the background
 
-displayTileAtCoordinates : (Tile, Int, Int) -> Form
-displayTileAtCoordinates (t,i,j) = let position = 
-                        (
-                          (tileSize + tileMargin) * (toFloat i - (toFloat gridSize - 1)/2)
-                        , (-1) * (tileSize + tileMargin) * (toFloat j - (toFloat gridSize - 1)/2)
-                        )
-                    in move position <| toForm <| displayTile t
-
 {------------------------------------------------------------------------------
                           Displaying a grid of tiles
 ------------------------------------------------------------------------------}
 
+displayTileAtCoordinates : (Tile, Int, Int) -> Form
+displayTileAtCoordinates (t,i,j) = let position = 
+                        (
+                          (tileSize + tileMargin) 
+                             * (toFloat i - (toFloat gridSize - 1)/2)
+                        , (-1) * (tileSize + tileMargin) 
+                             * (toFloat j - (toFloat gridSize - 1)/2)
+                        )
+                    in move position <| toForm <| displayTile t
+
 gridWidth : Float -- the width of the entire game grid
-gridWidth = (toFloat gridSize)*tileSize + (1 + toFloat gridSize)*tileMargin
+gridWidth = (toFloat gridSize) * tileSize + (1 + toFloat gridSize) * tileMargin
 
 displayGrid : Grid -> Element -- display a grid
 displayGrid (Grid ts) = let
@@ -106,10 +117,12 @@ displayGrid (Grid ts) = let
                     tiles = map displayTileAtCoordinates 
                         <| concat -- a list of the tiles with their row and 
                                   -- column coordinates
-                        <| zipWith (\j r -> map (\(t,i) -> (t,i,j)) r) [0..(gridSize-1)] 
+                        <| zipWith (\j r -> map (\(t,i) -> (t,i,j)) r) 
+                            [0..(gridSize-1)] 
                                 -- the tiles with row and column 
                                 -- coordinates attached
-                        <| map (\r -> zip r [0..(gridSize-1)]) -- the tiles with a row 
+                        <| map (\r -> zip r [0..(gridSize-1)]) -- the tiles 
+                                                    -- with a row coordinate
                                                     -- coordinate attached
                         <| ts -- the tiles
     in collage (round gridWidth) (round gridWidth) ([gridBox] ++ tiles)
@@ -126,36 +139,50 @@ displayOverlay s c t = collage (round gridWidth) (round gridWidth)
     , toForm <| centered <| style s <| toText t -- message
     ]
 
+gameOverOverlayStyle : Style
+gameOverOverlayStyle = tileTextStyle <| Number 2
+
+wonOverlayStyle : Style
+wonOverlayStyle = tileTextStyle <| Number 16
+
+gameOverOverlayColor : Color
+gameOverOverlayColor = rgba 238 228 218 0.73
+
+wonOverlayColor : Color
+wonOverlayColor = rgba 237 194 46 0.5
+
+gameOverMessage : String
+gameOverMessage = "Game over!"
+
+wonMessage : String
+wonMessage = "You won!"
 
 displayGameOverOverlay : Element -- display a game over overlay
 displayGameOverOverlay = displayOverlay 
-                            (tileTextStyle <| Number 2)
-                            (rgba 238 228 218 0.73)
-                            "Game over!"
+                            gameOverOverlayStyle
+                            gameOverOverlayColor
+                            gameOverMessage
 
 displayWonOverlay : Element -- display a game won overlay
 displayWonOverlay = displayOverlay 
-                            (tileTextStyle <| Number 16)
-                            (rgba 237 194 46 0.5)
-                            "You win!"
+                            wonOverlayStyle
+                            wonOverlayColor
+                            wonMessage
+
+applyOverlay : Element -> Element -> Element
+applyOverlay overlay grid = collage (round gridWidth) (round gridWidth)
+        [
+          toForm <| grid
+        , toForm <| overlay
+        ]
 
 {------------------------------------------------------------------------------
                             Displaying a game
 ------------------------------------------------------------------------------}
 
-display : (Int,Int) -> GameState -> Element -- display a game
-display (w,h) gameState = 
-    if gameState.gameProgress == GameOver 
-    then collage (round gridWidth) (round gridWidth) -- game over screen
-        [
-          toForm <| displayGrid gameState.grid
-        , toForm <| displayGameOverOverlay
-        ]
-    else if gameState.gameProgress == Won 
-    then collage (round gridWidth) (round gridWidth) -- victory screen
-        [
-          toForm <| displayGrid gameState.grid
-        , toForm <| displayWonOverlay
-        ]
-    else displayGrid gameState.grid -- just the grid
-
+display : GameState -> Element -- display a gamestate
+display gameState = (case gameState.gameProgress of
+                        GameOver -> applyOverlay displayGameOverOverlay
+                        Won -> applyOverlay displayWonOverlay
+                        otherwise -> id)
+                    <| displayGrid gameState.grid
