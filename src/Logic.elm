@@ -55,11 +55,10 @@ import Utils ((!))
                                 Tile sliding
 ------------------------------------------------------------------------------}
 
-groupedByTwo : [Int] -> [[Int]] -- takes a list of ints and 'slides' them to 
+groupedByTwo : [a] -> [[a]] -- takes a list of values and 'slides' them to 
                                 -- the left, removing 0s and joining in lists 
-                                -- pairs of adjacent identical ints.
-groupedByTwo l = groupedByTwo' <| filter (\x -> x/=0) l
-groupedByTwo' l = case l of
+                                -- pairs of adjacent identical values.
+groupedByTwo l = case l of
     [x] -> [[x]]
     [x,y] -> if (x == y) then [[x,y]] else [[x],[y]]
     (x::y::xs) -> if (x == y) then ([x,y] :: (groupedByTwo xs)) 
@@ -69,8 +68,11 @@ groupedByTwo' l = case l of
 slideRow : [Tile] -> ([Tile], Int) -- slides list of tiles to left,
                                    -- merging tiles where necessary,
                                    -- and returning a full list of 
-                                   -- four tiles
-slideRow r = let groupedInts = groupedByTwo <| map tileToInt r 
+                                   -- four tiles, and the number of
+                                   -- points gained
+slideRow r = let groupedInts = groupedByTwo 
+                            <| filter (\x -> x /= 0) 
+                            <| map tileToInt r 
     in (
         map intToTile 
         <| take gridSize 

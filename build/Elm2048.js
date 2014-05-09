@@ -388,7 +388,7 @@ Elm.Logic.make = function (_elm) {
                               ,_0: _v12._1
                               ,_1: _v12._2};}
                     _E.Case($moduleName,
-                    "on line 168, column 41 to 44");
+                    "on line 170, column 41 to 44");
                  }();
               })(List.filter(function (_v7) {
                  return function () {
@@ -397,7 +397,7 @@ Elm.Logic.make = function (_elm) {
                        return _U.eq(_v7._0,
                          GameModel.Empty);}
                     _E.Case($moduleName,
-                    "on line 169, column 43 to 53");
+                    "on line 171, column 43 to 53");
                  }();
               })(List.concat(A2(List.zipWith,
               F2(function (j,r) {
@@ -411,7 +411,7 @@ Elm.Logic.make = function (_elm) {
                                  ,_1: _v3._1
                                  ,_2: j};}
                        _E.Case($moduleName,
-                       "on line 171, column 56 to 61");
+                       "on line 173, column 56 to 61");
                     }();
                  },
                  r);
@@ -424,7 +424,7 @@ Elm.Logic.make = function (_elm) {
                  GameModel.gridSize - 1));
               })(_v0._0)))));}
          _E.Case($moduleName,
-         "between lines 168 and 173");
+         "between lines 170 and 175");
       }();
    };
    var newTileIndex = F2(function (x,
@@ -497,17 +497,10 @@ Elm.Logic.make = function (_elm) {
                  GameModel.Number(2048));
               })(List.concat(_v18._0))));}
          _E.Case($moduleName,
-         "on line 145, column 20 to 79");
+         "on line 147, column 20 to 79");
       }();
    };
    var groupedByTwo = function (l) {
-      return groupedByTwo$(A2(List.filter,
-      function (x) {
-         return !_U.eq(x,0);
-      },
-      l));
-   };
-   var groupedByTwo$ = function (l) {
       return function () {
          switch (l.ctor)
          {case "::": switch (l._1.ctor)
@@ -534,9 +527,11 @@ Elm.Logic.make = function (_elm) {
    };
    var slideRow = function (r) {
       return function () {
-         var groupedInts = groupedByTwo(A2(List.map,
+         var groupedInts = groupedByTwo(List.filter(function (x) {
+            return !_U.eq(x,0);
+         })(A2(List.map,
          GameModel.tileToInt,
-         r));
+         r)));
          return {ctor: "_Tuple2"
                 ,_0: List.map(GameModel.intToTile)(List.take(GameModel.gridSize)(_L.append(A2(List.map,
                 List.sum,
@@ -570,7 +565,7 @@ Elm.Logic.make = function (_elm) {
                switch (_v27.ctor)
                {case "Grid": return _v27._0;}
                _E.Case($moduleName,
-               "on line 96, column 48 to 49");
+               "on line 98, column 48 to 49");
             }();
          }(rotatedGrid));
          var slidRotatedGrid = GameModel.Grid(A2(List.map,
@@ -651,7 +646,6 @@ Elm.Logic.make = function (_elm) {
    });
    _elm.Logic.values = {_op: _op
                        ,groupedByTwo: groupedByTwo
-                       ,groupedByTwo$: groupedByTwo$
                        ,slideRow: slideRow
                        ,slideGrid: slideGrid
                        ,pushTiles: pushTiles
