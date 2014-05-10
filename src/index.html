@@ -1,6 +1,7 @@
 <html>
     <head>
         <title> 2048-elm </title>
+        <link rel="stylesheet" href="http://scrambledeggsontoast.github.io/public/css/reset.css">
         <script type="text/javascript" src="elm-runtime.js"></script>
         <script type="text/javascript" src="Elm2048.js"></script>
         <style>
@@ -20,10 +21,13 @@ h1 {
     font-weight: bold; 
     margin: 0px; 
     float: left;
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 #sideBits {
     float: right;
+    font-size: 14px;
 }
 
 #sideBits #scoreContainer {
@@ -55,24 +59,27 @@ h1 {
 
 p#description {
     clear: left;
+    font-size: 14px;
 }
 
 #gameBoard {
     width: 500px; 
     height: 500px; 
-    margin-top: 30px; 
+    margin-top: 20px; 
     clear: both;
 }
         </style>
     </head>
     <body onMouseUp="sendNewGame(false)">
         <div id="container">
-            <h1>2048-elm</h1>
-            <div id="sideBits" >
-                <div id="scoreContainer"><strong>SCORE<div id="score">0</div></strong></div>
-                <div onMouseDown="sendNewGame(true)" id="newGameButton"><strong>New Game</strong></div>
+            <div id="top">
+                <h1>2048-elm</h1>
+                <div id="sideBits" >
+                    <div id="scoreContainer"><strong>SCORE<div id="score">0</div></strong></div>
+                    <div onMouseDown="sendNewGame(true)" id="newGameButton"><strong>New Game</strong></div>
+                </div>
+                <p id="description">Join the numbers and get to the <strong>2048 tile!</strong></p>
             </div>
-            <p id="description">Join the numbers and get to the <strong>2048 tile!</strong></p>
             <div id="gameBoard"></div>
         </div>
     </body>
